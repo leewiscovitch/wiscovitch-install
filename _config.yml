@@ -9,3 +9,5 @@ kramdown:
 exclude:
   - wiscovitch.org.txt
   - README.md
+  - CLAUDE.md
+  - CLAUDE.local.md

@@ -7,5 +7,6 @@ _site/
 .jekyll-cache/
 .sass-cache/
 
-# Local Claude preview config
+# Local Claude preview config and private notes
 .claude/
+CLAUDE.local.md
