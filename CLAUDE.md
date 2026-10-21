@@ -26,6 +26,16 @@ Source for https://install.wiscovitch.org: copy/paste steps for setting up a fre
 
 The script tries `navigator.clipboard.writeText`, falls back to a hidden textarea + `execCommand('copy')`, and as a last resort selects the code and shows "Press Ctrl+C". It reads each block's text before inserting the button so the label isn't copied. Keep all three paths: a fresh OS may be on plain http or an old browser.
 
+## CI tests
+
+`.github/workflows/test.yml` runs after every GitHub Pages build (`page_build`; also manual via `workflow_dispatch`). It waits until the live site's `<meta name="revision">` matches the commit, extracts each page's code blocks from the **live** HTML (`tests/extract.py`), and runs them in page order:
+
+- Linux pages in fresh containers (`tests/run_linux.sh`) as a sudo user `tech`. `systemctl`, `timedatectl`, `gsettings`, `chsh` are stubs (no systemd/desktop), so those blocks report "stubbed"; a block that is just `bash` is skipped. Prompts get test answers.
+- The Windows page on `windows-latest` (Windows Server) via `tests/run_windows.ps1`, in Windows PowerShell 5.1 (a pwsh step shell gets killed when the page upgrades PowerShell 7). Each block's statements are checked for native exit codes; benign winget codes pass. Skipped there: Windows Update install, Store scan, `winget upgrade --all`, Explorer restart. The SSH check passes when sshd accepts the key; GitHub runners can't start the SSH session itself.
+- `tests/summarize.py` writes a per-block table to the job summary; blocks and logs are uploaded as artifacts.
+
+When adding a step that can't run in CI, add a skip rule in the runner with a reason rather than weakening the step on the page. Placeholders like `<NAME>` break PowerShell parsing (`<` is reserved); describe them in text instead of inside a PowerShell block.
+
 ## Checking changes
 
 Ruby/Jekyll isn't installed locally and includes/data only render under real Jekyll, so push and check the live site. Test copy over `http(s)://`, not a `file:`/`data:` URL: those can't reach the system clipboard.
