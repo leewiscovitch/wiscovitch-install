@@ -3,7 +3,7 @@
 #
 #   lang          code-block language (bash or powershell)
 #   update        list of commands; rendered one per line, chained with `&&\`
-#   install       install command; packages are appended, one per line in bash
+#   install       install command; packages are appended on the same line
 #   one_per_line  emit a separate install command per package (winget)
 
 apt:
