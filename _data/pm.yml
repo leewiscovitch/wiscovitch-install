@@ -2,6 +2,7 @@
 # Change a command here and every OS using that package manager picks it up.
 #
 #   lang          code-block language (bash or powershell)
+#   update_label  optional text above the update block (default "Update everything:")
 #   update        list of commands; rendered one per line, chained with `&&\`
 #   install       install command; packages are appended on the same line
 #   one_per_line  emit a separate install command per package (winget)
@@ -35,6 +36,7 @@ pacman:
 
 winget:
   lang: powershell
+  update_label: "Update apps installed through winget, including Store apps winget can see:"
   update:
     - "winget upgrade --all --accept-source-agreements --accept-package-agreements"
   install: "winget install -e --accept-source-agreements --accept-package-agreements --id"
