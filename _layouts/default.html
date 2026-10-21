@@ -49,9 +49,12 @@
       padding: .1em .4em; border-radius: 4px;
     }
     pre {
-      position: relative; background: var(--code-bg); border: 1px solid var(--border);
+      background: var(--code-bg); border: 1px solid var(--border);
       border-radius: 6px; padding: 14px 16px; padding-right: 72px; overflow-x: auto;
     }
+    /* Holds the button outside the scrolling pre so it stays put */
+    .code-wrap { position: relative; margin: 16px 0; }
+    .code-wrap pre { margin: 0; }
     /* Syntax colors for the classes Rouge puts on code-block tokens */
     .highlight .c, .highlight .c1, .highlight .ch, .highlight .cm, .highlight .cs { color: var(--hl-comment); font-style: italic; }
     .highlight .k, .highlight .kd, .highlight .kn, .highlight .kr, .highlight .kc, .highlight .kp, .highlight .kt { color: var(--hl-keyword); }
@@ -139,7 +142,11 @@
           legacyCopy() ? flash('Copied', true) : selectCode();
         }
       });
-      pre.appendChild(btn);
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      wrap.appendChild(btn);
     });
   </script>
 </body>
