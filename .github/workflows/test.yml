@@ -80,10 +80,16 @@ jobs:
           Get-Content "$env:RUNNER_TEMP\ci_key.pub" | Add-Content -Path $keys
           icacls.exe $keys /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F" | Out-Null
           Restart-Service sshd
-          $out = ssh -i "$env:RUNNER_TEMP\ci_key" -o StrictHostKeyChecking=no -o BatchMode=yes "$env:USERNAME@localhost" '$PSVersionTable.PSVersion.ToString()'
-          "remote shell reports PowerShell $out"
-          $status = if ($out -match '^7\.') { 'pass' } else { 'fail' }
-          Add-Content -Path blocks\results.tsv -Value "check-ssh-login`t$status`tremote shell is PowerShell $out" -Encoding utf8
+          Get-Service sshd | Format-List Name, Status, StartType
+          Get-ItemProperty -Path HKLM:\SOFTWARE\OpenSSH -Name DefaultShell -ErrorAction SilentlyContinue | Format-List DefaultShell
+          icacls.exe $keys
+          $out = ssh -i "$env:RUNNER_TEMP\ci_key" -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o BatchMode=yes "$env:USERNAME@localhost" 'Write-Output ("PS=" + $PSVersionTable.PSVersion.ToString())' 2>&1
+          "ssh exit $LASTEXITCODE, output:"; $out
+          $version = ($out | Select-String -Pattern 'PS=(\S+)' | ForEach-Object { $_.Matches[0].Groups[1].Value }) | Select-Object -First 1
+          $status = if ($version -match '^7\.') { 'pass' } else { 'fail' }
+          "check-ssh-login`t$status`tremote shell is PowerShell $version" | Out-File -FilePath blocks\results.tsv -Append -Encoding utf8
+          ($out | Out-String) | Out-File -FilePath blocks\check-ssh-login.log -Encoding utf8
+          $global:LASTEXITCODE = 0
 
       - name: Report
         if: always()

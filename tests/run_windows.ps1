@@ -52,7 +52,8 @@ foreach ($f in Get-ChildItem -Path $Dir -Filter *.powershell | Sort-Object Name)
     $script = Join-Path $env:RUNNER_TEMP "$name.ps1"
     Set-Content -Path $script -Value $sb.ToString() -Encoding utf8
     $log = Join-Path $Dir "$name.log"
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script *> $log
+    # Out-File keeps the log UTF-8; plain *> in Windows PowerShell writes UTF-16
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $script *>&1 | Out-File -FilePath $log -Encoding utf8
     switch ($LASTEXITCODE) {
         0       { Add-Result $name 'pass' '' }
         2       { Add-Result $name 'fail' 'PowerShell error' }
