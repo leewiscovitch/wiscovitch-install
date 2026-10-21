@@ -10,3 +10,6 @@ _site/
 # Local Claude preview config and private notes
 .claude/
 CLAUDE.local.md
+
+# Proxmox host-specific settings
+proxmox/config.env

@@ -32,3 +32,4 @@ exclude:
   - CLAUDE.md
   - CLAUDE.local.md
   - tests/
+  - proxmox/
