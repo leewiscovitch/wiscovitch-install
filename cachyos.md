@@ -27,6 +27,10 @@ bash
 
 {% include sudoers.md %}
 
+## Time zone
+
+{% include timezone.md %}
+
 ## Update
 
 {% include update.md %}

@@ -12,6 +12,10 @@ packages:
 
 Run everything in an elevated terminal: **Win+X → Terminal (Admin)**.
 
+## Time zone
+
+{% include timezone.md %}
+
 ## Update
 
 {% include update.md %}
