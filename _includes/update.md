@@ -2,5 +2,6 @@
 Update everything:
 
 ```{{ pm.lang }}
-{{ pm.update }}
+{% for cmd in pm.update %}{{ cmd }}{% unless forloop.last %} &&\
+{% endunless %}{% endfor %}
 ```

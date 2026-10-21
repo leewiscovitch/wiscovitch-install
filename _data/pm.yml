@@ -2,27 +2,32 @@
 # Change a command here and every OS using that package manager picks it up.
 #
 #   lang          code-block language (bash or powershell)
-#   update        full system update
-#   install       install command; packages are appended
-#   one_per_line  emit one install command per package (winget)
+#   update        list of commands; rendered one per line, chained with `&&\`
+#   install       install command; packages are appended, one per line in bash
+#   one_per_line  emit a separate install command per package (winget)
 
 apt:
   lang: bash
-  update: "sudo apt update && sudo apt full-upgrade -y"
+  update:
+    - "sudo apt update"
+    - "sudo apt full-upgrade -y"
   install: "sudo apt install -y"
 
 dnf:
   lang: bash
-  update: "sudo dnf upgrade --refresh -y"
+  update:
+    - "sudo dnf upgrade --refresh -y"
   install: "sudo dnf install -y"
 
 pacman:
   lang: bash
-  update: "sudo pacman -Syu"
+  update:
+    - "sudo pacman -Syu"
   install: "sudo pacman -S --needed"
 
 winget:
   lang: powershell
-  update: "winget upgrade --all --accept-source-agreements --accept-package-agreements"
+  update:
+    - "winget upgrade --all --accept-source-agreements --accept-package-agreements"
   install: "winget install -e --accept-source-agreements --accept-package-agreements --id"
   one_per_line: true
