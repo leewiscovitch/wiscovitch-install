@@ -8,7 +8,7 @@ Source for https://install.wiscovitch.org: copy/paste steps for setting up a fre
 - Every OS page has the same `##` sections in this order: Before you start, Update, Install, Configure, Optional, Verify. The layout builds the sticky section bar from the `##` headings, so don't add a manual table of contents.
 - Front matter: `title` (rendered as the h1 by the layout; don't add a `#` heading), `pm` (key in `_data/pm.yml`), `packages` (list for the install step), and optional `parent` / `parent_title` for the back link on sub-pages.
 - `_data/pm.yml` holds the update/install command for each package manager (apt, dnf, pacman, winget). Change a command there to change it for every OS that uses it.
-- `_includes/*.md` are shared step blocks (`update.md`, `install.md`, `git-config.md`, `os-info.md`) that read `page.pm` / `page.packages`. Steps used by more than one OS belong here, not copy-pasted; OS-specific steps go inline in the page.
+- `_includes/*.md` are shared step blocks (`sudoers.md`, `update.md`, `install.md`, `git-config.md`, `os-info.md`) that read `page.pm` / `page.packages`, and `site.user` (the account name, set in `_config.yml`). Steps used by more than one OS belong here, not copy-pasted; OS-specific steps go inline in the page.
 - Inside includes, keep Markdown at column 0 and fenced blocks on their own lines, since Liquid output is fed to kramdown as-is.
 - `_layouts/default.html` is the page wrapper: styles (light/dark via `prefers-color-scheme`), back link, h1, section bar and the copy-button script.
 - `_config.yml` is Jekyll config: default layout for every page, the `jekyll-redirect-from` plugin, and `exclude:` to keep repo-only files off the site.

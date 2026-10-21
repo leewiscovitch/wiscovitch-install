@@ -1,5 +1,8 @@
 title: Install Steps
 description: Copy/paste steps for setting up a fresh OS
+
+# Account name used in steps (sudoers, etc.)
+user: tech
 markdown: kramdown
 kramdown:
   input: GFM

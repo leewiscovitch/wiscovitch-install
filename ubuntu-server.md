@@ -15,6 +15,8 @@ packages:
 
 Run as a user with `sudo` rights.
 
+{% include sudoers.md %}
+
 ## Update
 
 {% include update.md %}
