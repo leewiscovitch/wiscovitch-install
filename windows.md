@@ -97,6 +97,42 @@ Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseMode
 
 {% include remove.md %}
 
+## Settings
+
+Run in the elevated terminal as `{{ site.user }}`; `HKCU` settings apply to the signed-in user.
+
+**Dark theme** for apps and Windows:
+
+```powershell
+$p = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+Set-ItemProperty -Path $p -Name AppsUseLightTheme -Type DWord -Value 0
+Set-ItemProperty -Path $p -Name SystemUsesLightTheme -Type DWord -Value 0
+```
+
+**Touchpad scrolling: normal** ("down motion scrolls down", not natural). Laptops with a precision touchpad only; mouse wheels already scroll normally:
+
+```powershell
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad" -Name ScrollDirection -Type DWord -Value 0xFFFFFFFF
+```
+
+**Alt+Tab shows windows only**, not browser tabs:
+
+```powershell
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name MultiTaskingAltTabFilter -Type DWord -Value 3
+```
+
+**Disable fast startup**, so shutdown fully shuts down (hibernate stays available):
+
+```powershell
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power" -Name HiberbootEnabled -Type DWord -Value 0
+```
+
+Restart Explorer to apply the theme and Alt+Tab changes now (the taskbar disappears for a moment). The touchpad change applies after you sign out and back in:
+
+```powershell
+Stop-Process -Name explorer -Force
+```
+
 ## Configure
 
 {% include ssh-config.md %}
