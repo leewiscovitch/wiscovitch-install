@@ -87,7 +87,9 @@ jobs:
           Get-Service sshd | Format-List Name, Status, StartType
           Get-ItemProperty -Path HKLM:\SOFTWARE\OpenSSH -Name DefaultShell -ErrorAction SilentlyContinue | Format-List DefaultShell
           icacls.exe $keys
-          $out = ssh -i "$env:RUNNER_TEMP\ci_key" -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o BatchMode=yes "citest@localhost" 'Write-Output ("PS=" + $PSVersionTable.PSVersion.ToString())' 2>&1
+          # Use Windows' own ssh client (the PATH may find Git's newer one first)
+          "client: " + (& "$env:WINDIR\System32\OpenSSH\ssh.exe" -V 2>&1)
+          $out = & "$env:WINDIR\System32\OpenSSH\ssh.exe" -v -i "$env:RUNNER_TEMP\ci_key" -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o BatchMode=yes "citest@localhost" 'Write-Output ("PS=" + $PSVersionTable.PSVersion.ToString())' 2>&1
           "ssh exit $LASTEXITCODE, output:"; $out
           if ($LASTEXITCODE) {
               "--- sshd service binary:"; (Get-CimInstance Win32_Service -Filter "Name='sshd'").PathName
