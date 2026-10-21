@@ -17,6 +17,7 @@ $skip = [ordered]@{
     'Get-WindowsUpdate[^\r\n]*-Install' = 'installs updates and reboots'
     'UpdateScanMethod'                  = 'Windows Server has no Microsoft Store'
     'Stop-Process -Name explorer'       = 'restarts the desktop shell'
+    'winget upgrade --all'              = 'would upgrade every tool on the CI image (install steps exercise winget)'
 }
 
 $wingetOk = '-1978335189, -1978335135, -1978335212'  # no upgrade, already installed, not installed

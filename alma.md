@@ -4,9 +4,10 @@ permalink: /alma/
 redirect_from:
   - /rocky/
 pm: dnf
+# No curl: EL ships curl-minimal, which provides the curl command and conflicts
+# with the full curl package on EL9 (dnf refuses to install it).
 packages:
   - git
-  - curl
   - vim
   - htop
 ---

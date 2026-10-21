@@ -66,7 +66,10 @@ jobs:
           }
           winget --version
 
+      # Windows PowerShell, not the default pwsh: blocks install/upgrade PowerShell 7,
+      # which would kill a step running in it (the page gives the same advice)
       - name: Run blocks
+        shell: powershell
         run: powershell -NoProfile -ExecutionPolicy Bypass -File tests\run_windows.ps1 -Dir blocks
 
       - name: Check SSH key login and PowerShell 7 as the SSH shell
