@@ -9,12 +9,16 @@
       --bg: #ffffff; --fg: #1f2328; --muted: #59636e; --border: #d1d9e0;
       --code-bg: #f6f8fa; --accent: #0969da; --ok: #1a7f37;
       --inline-bg: #eff2f5; --inline-fg: #0550ae; --inline-border: #d1d9e0;
+      --hl-keyword: #cf222e; --hl-command: #8250df; --hl-flag: #0550ae;
+      --hl-string: #0a3069; --hl-var: #953800; --hl-comment: #6e7781;
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --border: #3d444d;
         --code-bg: #161b22; --accent: #4493f8; --ok: #3fb950;
         --inline-bg: #1f2a3a; --inline-fg: #79c0ff; --inline-border: #2f4a6b;
+        --hl-keyword: #ff7b72; --hl-command: #d2a8ff; --hl-flag: #79c0ff;
+        --hl-string: #a5d6ff; --hl-var: #ffa657; --hl-comment: #8b949e;
       }
     }
     * { box-sizing: border-box; }
@@ -48,6 +52,15 @@
       position: relative; background: var(--code-bg); border: 1px solid var(--border);
       border-radius: 6px; padding: 14px 16px; padding-right: 72px; overflow-x: auto;
     }
+    /* Syntax colors for the classes Rouge puts on code-block tokens */
+    .highlight .c, .highlight .c1, .highlight .ch, .highlight .cm, .highlight .cs { color: var(--hl-comment); font-style: italic; }
+    .highlight .k, .highlight .kd, .highlight .kn, .highlight .kr, .highlight .kc, .highlight .kp, .highlight .kt { color: var(--hl-keyword); }
+    .highlight .nb, .highlight .nf, .highlight .bp, .highlight .n { color: var(--hl-command); }
+    .highlight .nt, .highlight .m, .highlight .mi, .highlight .mf, .highlight .mh { color: var(--hl-flag); }
+    .highlight .s, .highlight .s1, .highlight .s2, .highlight .sb, .highlight .sd, .highlight .se,
+    .highlight .sh, .highlight .si, .highlight .sx, .highlight .no { color: var(--hl-string); }
+    .highlight .nv, .highlight .vg, .highlight .vi, .highlight .vc { color: var(--hl-var); }
+    .highlight .o, .highlight .ow { color: var(--hl-keyword); }
     .copy-btn {
       position: absolute; top: 8px; right: 8px;
       font: 13px system-ui, sans-serif; padding: 4px 10px; cursor: pointer;
