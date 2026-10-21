@@ -1,0 +1,33 @@
+---
+title: Windows 11
+permalink: /windows/
+pm: winget
+packages:
+  - Git.Git
+  - GitHub.cli
+  - Microsoft.PowerShell
+---
+
+## Before you start
+
+Run everything in an elevated terminal: **Win+X → Terminal (Admin)**.
+
+## Update
+
+{% include update.md %}
+
+## Install
+
+{% include install.md %}
+
+## Configure
+
+{% include git-config.md %}
+
+## Optional
+
+_No steps yet._
+
+## Verify
+
+{% include os-info.md %}

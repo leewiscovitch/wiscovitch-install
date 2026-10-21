@@ -5,6 +5,16 @@ kramdown:
   input: GFM
   syntax_highlighter: rouge
 
+plugins:
+  - jekyll-redirect-from
+
+# Every page uses the default layout without having to say so
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
 # Keep the Cloudflare DNS export and repo housekeeping off the site
 exclude:
   - wiscovitch.org.txt

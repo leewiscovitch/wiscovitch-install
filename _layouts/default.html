@@ -22,7 +22,20 @@
     }
     main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
     h1 { margin-top: 0; }
-    h2 { border-bottom: 1px solid var(--border); padding-bottom: .3em; margin-top: 2em; }
+    h2 { border-bottom: 1px solid var(--border); padding-bottom: .3em; margin-top: 2em; scroll-margin-top: 60px; }
+    .back { display: inline-block; margin-bottom: 8px; font-size: 14px; text-decoration: none; }
+    .section-nav {
+      position: sticky; top: 0; z-index: 10; margin: 0 -16px 16px; padding: 10px 16px;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 6px 8px;
+    }
+    .section-nav a {
+      font-size: 14px; text-decoration: none; padding: 3px 10px;
+      border: 1px solid var(--border); border-radius: 999px;
+    }
+    .section-nav a:hover { border-color: var(--accent); }
+    ul.os-list { padding-left: 1.2em; }
+    ul.os-list li { margin: .3em 0; font-size: 18px; }
     a { color: var(--accent); }
     code { font: 14px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; }
     :not(pre) > code { background: var(--code-bg); padding: .15em .35em; border-radius: 4px; }
@@ -41,9 +54,27 @@
 </head>
 <body>
   <main>
+    {% if page.url != "/" %}<a class="back" href="{{ page.parent | default: '/' | relative_url }}">← {{ page.parent_title | default: 'All OSes' }}</a>{% endif %}
+    <h1>{{ page.title }}</h1>
     {{ content }}
   </main>
   <script>
+    // Sticky bar linking to each ## section, built from the page's h2 headings
+    (function () {
+      var heads = document.querySelectorAll('main h2[id]');
+      if (heads.length < 2) return;
+      var nav = document.createElement('nav');
+      nav.className = 'section-nav';
+      heads.forEach(function (h) {
+        var a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.textContent = h.textContent;
+        nav.appendChild(a);
+      });
+      var h1 = document.querySelector('main h1');
+      h1.parentNode.insertBefore(nav, h1.nextSibling);
+    })();
+
     // Add a Copy button to every code block
     document.querySelectorAll('pre').forEach(function (pre) {
       // Read the text before the button is added so its label isn't copied
