@@ -74,7 +74,11 @@ jobs:
 
       - name: Check SSH key login and PowerShell 7 as the SSH shell
         run: |
-          # Authorize a throwaway key the same way the page authorizes GitHub keys, then log in to localhost
+          # Authorize a throwaway key the same way the page authorizes GitHub keys, then log in to localhost.
+          # Log in as a regular local admin: sshd can't create a session for the runner's own runneradmin account.
+          $pw = ConvertTo-SecureString ("Ci-" + [Guid]::NewGuid().ToString()) -AsPlainText -Force
+          New-LocalUser -Name citest -Password $pw -PasswordNeverExpires | Out-Null
+          Add-LocalGroupMember -Group Administrators -Member citest
           ssh-keygen -q -t ed25519 -N '""' -f "$env:RUNNER_TEMP\ci_key"
           $keys = "$env:ProgramData\ssh\administrators_authorized_keys"
           Get-Content "$env:RUNNER_TEMP\ci_key.pub" | Add-Content -Path $keys
@@ -83,7 +87,7 @@ jobs:
           Get-Service sshd | Format-List Name, Status, StartType
           Get-ItemProperty -Path HKLM:\SOFTWARE\OpenSSH -Name DefaultShell -ErrorAction SilentlyContinue | Format-List DefaultShell
           icacls.exe $keys
-          $out = ssh -i "$env:RUNNER_TEMP\ci_key" -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o BatchMode=yes "$env:USERNAME@localhost" 'Write-Output ("PS=" + $PSVersionTable.PSVersion.ToString())' 2>&1
+          $out = ssh -i "$env:RUNNER_TEMP\ci_key" -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o BatchMode=yes "citest@localhost" 'Write-Output ("PS=" + $PSVersionTable.PSVersion.ToString())' 2>&1
           "ssh exit $LASTEXITCODE, output:"; $out
           if ($LASTEXITCODE) {
               "--- sshd service binary:"; (Get-CimInstance Win32_Service -Filter "Name='sshd'").PathName
