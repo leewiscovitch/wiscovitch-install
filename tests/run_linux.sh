@@ -61,16 +61,20 @@ for f in "$dir"/*.bash; do
 done
 
 # Extra checks after all blocks: config files the page wrote should be valid
-if [ -f /home/$user/.ssh/config ]; then
-    if command -v ssh >/dev/null && sudo -u "$user" -H ssh -G example.com | grep -qx 'stricthostkeychecking accept-new'; then
+if [ -f /home/$user/.ssh/config ] && ! command -v ssh >/dev/null; then
+    printf 'check-ssh-config\tskip\tno ssh client in this container image\n' >> "$results"
+elif [ -f /home/$user/.ssh/config ]; then
+    if sudo -u "$user" -H ssh -G example.com > "$dir/check-ssh-config.log" 2>&1 && grep -qx 'stricthostkeychecking accept-new' "$dir/check-ssh-config.log"; then
         printf 'check-ssh-config\tpass\tssh -G reads accept-new\n' >> "$results"
     else
         printf 'check-ssh-config\tfail\tssh -G did not read the config\n' >> "$results"
     fi
 fi
 if command -v sshd >/dev/null || [ -x /usr/sbin/sshd ]; then
+    # Host keys and /run/sshd are normally created by the systemd unit, which doesn't run here
     ssh-keygen -A >/dev/null 2>&1
-    if /usr/sbin/sshd -t > "$dir/check-sshd.log" 2>&1; then
+    mkdir -p /run/sshd
+    if /usr/sbin/sshd -t > "$dir/check-sshd-config.log" 2>&1; then
         printf 'check-sshd-config\tpass\tsshd -t\n' >> "$results"
     else
         printf 'check-sshd-config\tfail\tsshd -t\n' >> "$results"

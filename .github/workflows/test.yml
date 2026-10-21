@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONIOENCODING: utf-8
+
 jobs:
   linux:
     name: ${{ matrix.page }} on ${{ matrix.image }}
@@ -36,6 +39,13 @@ jobs:
       - name: Report
         if: always()
         run: python3 tests/summarize.py blocks "${{ matrix.page }} on ${{ matrix.image }}"
+
+      - name: Keep blocks and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blocks-${{ strategy.job-index }}
+          path: blocks/
 
   windows:
     name: /windows/ on Windows Server
@@ -75,3 +85,10 @@ jobs:
       - name: Report
         if: always()
         run: python tests/summarize.py blocks "/windows/ on Windows Server"
+
+      - name: Keep blocks and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blocks-windows
+          path: blocks/

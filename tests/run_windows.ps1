@@ -59,3 +59,5 @@ foreach ($f in Get-ChildItem -Path $Dir -Filter *.powershell | Sort-Object Name)
         default { Add-Result $name 'fail' "exit $LASTEXITCODE" }
     }
 }
+# Pass/fail is decided by summarize.py from results.tsv, not by this script's exit code
+exit 0
