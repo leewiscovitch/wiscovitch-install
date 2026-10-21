@@ -5,6 +5,7 @@ pm: winget
 packages:
   - Git.Git
   - GitHub.cli
+  - Microsoft.WindowsTerminal
 # Built-in apps offered for removal, in groups. `id` is the version-free
 # package name winget matches against (see `winget list`).
 remove:
@@ -112,17 +113,23 @@ Make PowerShell 7 the default Windows Terminal profile, so new tabs and **Win+X 
 
 ```powershell
 $wt = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-$json = [IO.File]::ReadAllText($wt) -replace '"defaultProfile"\s*:\s*"[^"]*"', '"defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}"'
+$pwshProfile = "{574e775e-4f2a-5b96-ac1e-a2962a402336}"
+if (Test-Path $wt) {
+    $json = [IO.File]::ReadAllText($wt) -replace '"defaultProfile"\s*:\s*"[^"]*"', "`"defaultProfile`": `"$pwshProfile`""
+} else {
+    New-Item -ItemType Directory -Force -Path (Split-Path $wt) | Out-Null
+    $json = "{ `"defaultProfile`": `"$pwshProfile`" }"
+}
 [IO.File]::WriteAllText($wt, $json, [Text.UTF8Encoding]::new($false))
 Select-String -Path $wt -Pattern '"defaultProfile"'
 ```
 
-Close and reopen Terminal; the PowerShell 7 profile appears once Terminal detects the new install.
+If Terminal has never been opened, this creates a settings file with just the default profile, and Terminal fills in the rest on first launch. Close and reopen Terminal; the PowerShell 7 profile appears once Terminal detects the new install.
 
 Make PowerShell 7 the shell for incoming SSH sessions (the default is `cmd.exe`):
 
 ```powershell
-New-Item -Path "HKLM:\SOFTWARE\OpenSSH" -Force | Out-Null
+if (-not (Test-Path "HKLM:\SOFTWARE\OpenSSH")) { New-Item -Path "HKLM:\SOFTWARE\OpenSSH" | Out-Null }
 New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "$env:ProgramFiles\PowerShell\7\pwsh.exe" -PropertyType String -Force | Out-Null
 Get-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell
 ```
@@ -149,10 +156,12 @@ Set-ItemProperty -Path $p -Name AppsUseLightTheme -Type DWord -Value 0
 Set-ItemProperty -Path $p -Name SystemUsesLightTheme -Type DWord -Value 0
 ```
 
-**Touchpad scrolling: normal** ("down motion scrolls down", not natural). Laptops with a precision touchpad only; mouse wheels already scroll normally:
+**Touchpad scrolling: normal** ("down motion scrolls down", not natural). Applies to precision touchpads (harmless on machines without one); mouse wheels already scroll normally:
 
 ```powershell
-Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad" -Name ScrollDirection -Type DWord -Value 0xFFFFFFFF
+$p = "HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad"
+if (-not (Test-Path $p)) { New-Item -Path $p | Out-Null }
+Set-ItemProperty -Path $p -Name ScrollDirection -Type DWord -Value 0xFFFFFFFF
 ```
 
 **Alt+Tab shows windows only**, not browser tabs:
