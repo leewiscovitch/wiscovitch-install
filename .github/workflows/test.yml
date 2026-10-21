@@ -85,6 +85,14 @@ jobs:
           icacls.exe $keys
           $out = ssh -i "$env:RUNNER_TEMP\ci_key" -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o BatchMode=yes "$env:USERNAME@localhost" 'Write-Output ("PS=" + $PSVersionTable.PSVersion.ToString())' 2>&1
           "ssh exit $LASTEXITCODE, output:"; $out
+          if ($LASTEXITCODE) {
+              "--- sshd service binary:"; (Get-CimInstance Win32_Service -Filter "Name='sshd'").PathName
+              "--- sshd effective config:"; & "$env:WINDIR\System32\OpenSSH\sshd.exe" -T 2>&1 | Select-String 'authorizedkeysfile|pubkeyauthentication|strictmodes'
+              "--- sshd_config Match block:"; Get-Content "$env:ProgramData\ssh\sshd_config" | Select-String -Pattern 'Match|AuthorizedKeysFile|PubkeyAuthentication'
+              "--- administrators_authorized_keys:"; Get-Content $keys | ForEach-Object { $_.Substring(0, [Math]::Min(60, $_.Length)) }
+              "--- file owner:"; (Get-Acl $keys).Owner
+              "--- OpenSSH events:"; Get-WinEvent -LogName OpenSSH/Operational -MaxEvents 15 -ErrorAction SilentlyContinue | ForEach-Object { $_.Message }
+          }
           $version = ($out | Select-String -Pattern 'PS=(\S+)' | ForEach-Object { $_.Matches[0].Groups[1].Value }) | Select-Object -First 1
           $status = if ($version -match '^7\.') { 'pass' } else { 'fail' }
           "check-ssh-login`t$status`tremote shell is PowerShell $version" | Out-File -FilePath blocks\results.tsv -Append -Encoding utf8
