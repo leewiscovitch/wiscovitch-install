@@ -13,6 +13,18 @@ packages:
 
 Run as a user with `sudo` rights.
 
+CachyOS defaults to fish, but these steps use bash syntax. Make bash the login shell (asks for your password):
+
+```bash
+chsh -s /bin/bash
+```
+
+Then switch to bash in the current terminal:
+
+```bash
+bash
+```
+
 {% include sudoers.md %}
 
 ## Update
