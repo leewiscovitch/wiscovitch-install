@@ -52,23 +52,42 @@
       btn.className = 'copy-btn';
       btn.type = 'button';
       btn.textContent = 'Copy';
+      var flash = function (label, ok) {
+        btn.textContent = label;
+        btn.classList.toggle('copied', ok);
+        setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2500);
+      };
+      // Fallback for plain-http, older browsers, or when the Clipboard API is refused
+      var legacyCopy = function () {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        ta.remove();
+        return ok;
+      };
+      // Last resort: highlight the code so Ctrl+C works
+      var selectCode = function () {
+        var range = document.createRange();
+        range.selectNodeContents(pre.querySelector('code') || pre.firstChild);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        flash('Press Ctrl+C', false);
+      };
       btn.addEventListener('click', function () {
-        var done = function () {
-          btn.textContent = 'Copied';
-          btn.classList.add('copied');
-          setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
-        };
         if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(text).then(done);
+          navigator.clipboard.writeText(text).then(function () { flash('Copied', true); }, function () {
+            legacyCopy() ? flash('Copied', true) : selectCode();
+          });
         } else {
-          // Fallback for plain-http or older browsers on a fresh install
-          var ta = document.createElement('textarea');
-          ta.value = text;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          ta.remove();
-          done();
+          legacyCopy() ? flash('Copied', true) : selectCode();
         }
       });
       pre.appendChild(btn);

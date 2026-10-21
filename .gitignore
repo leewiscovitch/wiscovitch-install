@@ -6,3 +6,6 @@ wiscovitch.org.txt
 _site/
 .jekyll-cache/
 .sass-cache/
+
+# Local Claude preview config
+.claude/
