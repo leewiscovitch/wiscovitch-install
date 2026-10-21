@@ -33,6 +33,8 @@ sudo dnf install -y epel-release
 
 ## Configure
 
+{% include ssh-config.md %}
+
 {% include git-config.md %}
 
 ## Optional
