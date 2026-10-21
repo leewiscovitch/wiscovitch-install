@@ -127,6 +127,41 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power" -Name HiberbootEnabled -Type DWord -Value 0
 ```
 
+**Power timeouts.** Plugged in: screen off after 30 minutes, never sleep. On battery: screen off after 15 minutes, sleep after 30 (`0` means never):
+
+```powershell
+powercfg /change monitor-timeout-ac 30
+powercfg /change standby-timeout-ac 0
+powercfg /change hibernate-timeout-ac 0
+powercfg /change monitor-timeout-dc 15
+powercfg /change standby-timeout-dc 30
+```
+
+**Lid close** (laptops): do nothing when plugged in, sleep on battery. Uses GUIDs because the `LIDACTION` alias isn't available on every machine; values are 0 nothing, 1 sleep, 2 hibernate, 3 shut down:
+
+```powershell
+$buttons = "4f971e89-eebd-4455-a8de-9e59040e7347"
+$lid = "5ca83367-6e45-459f-a27b-476b1d01c936"
+powercfg /setacvalueindex SCHEME_CURRENT $buttons $lid 0
+powercfg /setdcvalueindex SCHEME_CURRENT $buttons $lid 1
+powercfg /setactive SCHEME_CURRENT
+```
+
+**Power mode: Best performance** (Settings → System → Power → Power mode). `powercfg` has no command for this, so it calls the Windows power API directly; it prints `0` on success:
+
+```powershell
+if (-not ('Win.Power' -as [type])) { Add-Type -Namespace Win -Name Power -MemberDefinition '[DllImport("powrprof.dll")] public static extern uint PowerSetActiveOverlayScheme(Guid overlay);' }
+[Win.Power]::PowerSetActiveOverlayScheme([Guid]"ded574b5-45a0-4f42-8737-46345c09c238")
+```
+
+Check the timeouts and lid setting:
+
+```powershell
+powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE
+powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE
+powercfg /query SCHEME_CURRENT 4f971e89-eebd-4455-a8de-9e59040e7347 5ca83367-6e45-459f-a27b-476b1d01c936
+```
+
 Restart Explorer to apply the theme and Alt+Tab changes now (the taskbar disappears for a moment). The touchpad change applies after you sign out and back in:
 
 ```powershell
