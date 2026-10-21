@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+  <style>
+    :root {
+      --bg: #ffffff; --fg: #1f2328; --muted: #59636e; --border: #d1d9e0;
+      --code-bg: #f6f8fa; --accent: #0969da; --ok: #1a7f37;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --border: #3d444d;
+        --code-bg: #161b22; --accent: #4493f8; --ok: #3fb950;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { margin-top: 0; }
+    h2 { border-bottom: 1px solid var(--border); padding-bottom: .3em; margin-top: 2em; }
+    a { color: var(--accent); }
+    code { font: 14px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; }
+    :not(pre) > code { background: var(--code-bg); padding: .15em .35em; border-radius: 4px; }
+    pre {
+      position: relative; background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 14px 16px; padding-right: 72px; overflow-x: auto;
+    }
+    .copy-btn {
+      position: absolute; top: 8px; right: 8px;
+      font: 13px system-ui, sans-serif; padding: 4px 10px; cursor: pointer;
+      color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    }
+    .copy-btn:hover { border-color: var(--accent); }
+    .copy-btn.copied { color: var(--ok); border-color: var(--ok); }
+  </style>
+</head>
+<body>
+  <main>
+    {{ content }}
+  </main>
+  <script>
+    // Add a Copy button to every code block
+    document.querySelectorAll('pre').forEach(function (pre) {
+      // Read the text before the button is added so its label isn't copied
+      var text = pre.innerText.replace(/\n+$/, '');
+      var btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.type = 'button';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', function () {
+        var done = function () {
+          btn.textContent = 'Copied';
+          btn.classList.add('copied');
+          setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(done);
+        } else {
+          // Fallback for plain-http or older browsers on a fresh install
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+          done();
+        }
+      });
+      pre.appendChild(btn);
+    });
+  </script>
+</body>
+</html>

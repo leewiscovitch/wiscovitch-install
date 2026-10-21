@@ -1,0 +1,11 @@
+title: Install Steps
+description: Copy/paste steps for setting up a fresh OS
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Keep the Cloudflare DNS export and repo housekeeping off the site
+exclude:
+  - wiscovitch.org.txt
+  - README.md

@@ -1,0 +1,8 @@
+# Cloudflare DNS export: exposes AWS hostnames and home IP, never publish
+wiscovitch.org.txt
+*.zone
+
+# Local Jekyll build output
+_site/
+.jekyll-cache/
+.sass-cache/
