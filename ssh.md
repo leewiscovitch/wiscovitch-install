@@ -111,7 +111,7 @@ ssh -v {{ site.user }}@<HOST>
 
 ## Disable passwords
 
-Optional: once key logins work, turn off password logins. Keep one SSH session open while you do this, so a mistake can't lock you out.
+Password logins stay enabled: nothing on this site turns them off unless you run the steps below. Once key logins work, you can disable passwords so only keys are accepted. Keep one SSH session open while you do this, so a mistake can't lock you out.
 
 Linux (the service is `ssh` on Ubuntu and `sshd` elsewhere; the reload line tries both):
 
@@ -134,3 +134,19 @@ Select-String -Path $cfg -Pattern '^PasswordAuthentication'
 ```
 
 The last line should show `PasswordAuthentication no`.
+
+To turn passwords back on, Linux:
+
+```bash
+sudo rm /etc/ssh/sshd_config.d/01-no-passwords.conf
+sudo sshd -t &&\
+{ sudo systemctl reload ssh 2>/dev/null || sudo systemctl reload sshd; }
+```
+
+Windows (elevated PowerShell):
+
+```powershell
+$cfg = "$env:ProgramData\ssh\sshd_config"
+(Get-Content $cfg) -replace '^PasswordAuthentication no', '#PasswordAuthentication yes' | Set-Content $cfg
+Restart-Service sshd
+```
