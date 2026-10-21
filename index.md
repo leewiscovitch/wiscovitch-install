@@ -11,3 +11,9 @@ Copy/paste steps for setting up a fresh OS. Pick one:
   <li><a href="{{ '/alma/' | relative_url }}">AlmaLinux / Rocky Linux</a></li>
   <li><a href="{{ '/cachyos/' | relative_url }}">CachyOS</a></li>
 </ul>
+
+Guides:
+
+<ul class="os-list">
+  <li><a href="{{ '/ssh/' | relative_url }}">SSH keys</a>: create, publish and accept keys on Linux and Windows</li>
+</ul>

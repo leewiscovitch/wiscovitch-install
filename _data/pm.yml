@@ -5,6 +5,8 @@
 #   update        list of commands; rendered one per line, chained with `&&\`
 #   install       install command; packages are appended on the same line
 #   one_per_line  emit a separate install command per package (winget)
+#   sshd_pkg      package that provides the SSH server
+#   sshd_service  systemd unit name for the SSH server
 
 apt:
   lang: bash
@@ -12,18 +14,24 @@ apt:
     - "sudo apt update"
     - "sudo apt full-upgrade -y"
   install: "sudo apt install -y"
+  sshd_pkg: openssh-server
+  sshd_service: ssh
 
 dnf:
   lang: bash
   update:
     - "sudo dnf upgrade --refresh -y"
   install: "sudo dnf install -y"
+  sshd_pkg: openssh-server
+  sshd_service: sshd
 
 pacman:
   lang: bash
   update:
     - "sudo pacman -Syu"
   install: "sudo pacman -S --needed"
+  sshd_pkg: openssh
+  sshd_service: sshd
 
 winget:
   lang: powershell

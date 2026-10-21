@@ -24,6 +24,8 @@ Run everything in an elevated terminal: **Win+X → Terminal (Admin)**.
 
 {% include ssh-config.md %}
 
+{% include ssh-server.md %}
+
 {% include git-config.md %}
 
 ## Optional

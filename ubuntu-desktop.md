@@ -29,6 +29,8 @@ Run as a user with `sudo` rights.
 
 {% include ssh-config.md %}
 
+{% include ssh-server.md %}
+
 {% include git-config.md %}
 
 ## Optional

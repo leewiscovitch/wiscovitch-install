@@ -3,6 +3,9 @@ description: Copy/paste steps for setting up a fresh OS
 
 # Account name used in steps (sudoers, etc.)
 user: tech
+
+# GitHub account whose public SSH keys (github.com/<user>.keys) are trusted for logins
+github_user: leewiscovitch
 markdown: kramdown
 kramdown:
   input: GFM
