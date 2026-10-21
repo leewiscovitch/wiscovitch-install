@@ -8,11 +8,13 @@
     :root {
       --bg: #ffffff; --fg: #1f2328; --muted: #59636e; --border: #d1d9e0;
       --code-bg: #f6f8fa; --accent: #0969da; --ok: #1a7f37;
+      --inline-bg: #eff2f5; --inline-fg: #0550ae; --inline-border: #d1d9e0;
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --border: #3d444d;
         --code-bg: #161b22; --accent: #4493f8; --ok: #3fb950;
+        --inline-bg: #1f2a3a; --inline-fg: #79c0ff; --inline-border: #2f4a6b;
       }
     }
     * { box-sizing: border-box; }
@@ -38,7 +40,10 @@
     ul.os-list li { margin: .3em 0; font-size: 18px; }
     a { color: var(--accent); }
     code { font: 14px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; }
-    :not(pre) > code { background: var(--code-bg); padding: .15em .35em; border-radius: 4px; }
+    :not(pre) > code {
+      background: var(--inline-bg); color: var(--inline-fg); border: 1px solid var(--inline-border);
+      padding: .1em .4em; border-radius: 4px;
+    }
     pre {
       position: relative; background: var(--code-bg); border: 1px solid var(--border);
       border-radius: 6px; padding: 14px 16px; padding-right: 72px; overflow-x: auto;
