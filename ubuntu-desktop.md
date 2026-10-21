@@ -29,6 +29,15 @@ Run as a user with `sudo` rights.
 
 {% include install.md %}
 
+## Settings
+
+Scrolling: normal, not natural, for touchpads and mice. Run as `{{ site.user }}` in a terminal inside the desktop session (not over SSH, and not with `sudo`):
+
+```bash
+gsettings set org.gnome.desktop.peripherals.touchpad natural-scroll false &&\
+gsettings set org.gnome.desktop.peripherals.mouse natural-scroll false
+```
+
 ## Configure
 
 {% include ssh-config.md %}

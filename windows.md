@@ -5,7 +5,6 @@ pm: winget
 packages:
   - Git.Git
   - GitHub.cli
-  - Microsoft.PowerShell
 # Built-in apps offered for removal, in groups. `id` is the version-free
 # package name winget matches against (see `winget list`).
 remove:
@@ -92,6 +91,47 @@ Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseMode
 ## Install
 
 {% include install.md %}
+
+## PowerShell 7
+
+Install the latest stable PowerShell 7. Run the same command later to update it (winget upgrades it if it's already installed; `winget upgrade --all` also keeps it current). Run it from Windows PowerShell rather than from PowerShell 7 itself, so the installer isn't replacing the shell it's running in:
+
+```powershell
+winget install --id Microsoft.PowerShell -e --source winget --accept-source-agreements --accept-package-agreements
+```
+
+This installs to `C:\Program Files\PowerShell\7`. If PowerShell 7 was installed from the Microsoft Store instead, both can coexist, but the SSH step below needs this one.
+
+Allow scripts in PowerShell 7 too; it keeps its own execution policy, separate from Windows PowerShell:
+
+```powershell
+& "$env:ProgramFiles\PowerShell\7\pwsh.exe" -NoProfile -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope LocalMachine -Force; Get-ExecutionPolicy -Scope LocalMachine"
+```
+
+Make PowerShell 7 the default Windows Terminal profile, so new tabs and **Win+X → Terminal (Admin)** open it:
+
+```powershell
+$wt = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+$json = [IO.File]::ReadAllText($wt) -replace '"defaultProfile"\s*:\s*"[^"]*"', '"defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}"'
+[IO.File]::WriteAllText($wt, $json, [Text.UTF8Encoding]::new($false))
+Select-String -Path $wt -Pattern '"defaultProfile"'
+```
+
+Close and reopen Terminal; the PowerShell 7 profile appears once Terminal detects the new install.
+
+Make PowerShell 7 the shell for incoming SSH sessions (the default is `cmd.exe`):
+
+```powershell
+New-Item -Path "HKLM:\SOFTWARE\OpenSSH" -Force | Out-Null
+New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "$env:ProgramFiles\PowerShell\7\pwsh.exe" -PropertyType String -Force | Out-Null
+Get-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell
+```
+
+Check the version from a new Terminal tab:
+
+```powershell
+$PSVersionTable.PSVersion
+```
 
 ## Remove apps
 
