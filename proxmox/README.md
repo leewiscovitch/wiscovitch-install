@@ -83,3 +83,100 @@ cd /var/lib/vz/import
 curl -fLO https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2
 echo "28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f  Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2" | sha256sum -c
 ```
+
+## 3. Pool, CI user and API token
+
+Everything for the tests lives in pool `ci`. The runner talks to Proxmox as
+`ci@pve` with an API token that can only reach that pool, `local-lvm` storage
+and the `vmbr0` bridge; it can't see any other guest on the host.
+
+On the Proxmox host:
+
+```bash
+pveum pool add ci --comment "install.wiscovitch.org CI: templates, test VMs, runner"
+pveum user add ci@pve --comment "GitHub Actions runner for install.wiscovitch.org tests"
+pveum acl modify /pool/ci --users ci@pve --roles PVEVMAdmin,PVEPoolUser
+pveum acl modify /storage/local-lvm --users ci@pve --roles PVEDatastoreUser
+pveum acl modify /sdn/zones/localnetwork/vmbr0 --users ci@pve --roles PVESDNUser
+```
+
+Create the token. `--privsep 0` gives it the user's (limited) permissions. The
+secret is shown only once, so write it straight to a root-only file:
+
+```bash
+umask 077
+pveum user token add ci@pve runner --privsep 0 --output-format json \
+  | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d["full-tokenid"] + "=" + d["value"])' > /root/ci-runner-token
+```
+
+Check what it can see:
+
+```bash
+pveum user permissions ci@pve
+```
+
+Expected: only `/pool/ci`, `/sdn/zones/localnetwork/vmbr0` and `/storage/local-lvm`.
+
+## 4. Runner container
+
+CT 9050 `gh-runner`: Debian 13, unprivileged, 2 vCPU, 2 GB RAM, 16 GB disk, DHCP on
+`vmbr0`, starts on boot. It holds the API token and the SSH key the tests use to
+log in to test VMs.
+
+On the Proxmox host:
+
+```bash
+pct create 9050 local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst \
+  --hostname gh-runner --pool ci --unprivileged 1 --features nesting=1 \
+  --cores 2 --memory 2048 --swap 512 --rootfs local-lvm:16 \
+  --net0 name=eth0,bridge=vmbr0,ip=dhcp --onboot 1 --timezone America/New_York
+pct start 9050
+pct exec 9050 -- bash -c 'apt-get update && apt-get install -y curl ca-certificates jq git python3 openssh-client sudo'
+```
+
+A `runner` user with its own SSH key (its public key goes into every test template):
+
+```bash
+pct exec 9050 -- bash -c 'useradd -m -s /bin/bash runner && sudo -u runner ssh-keygen -t ed25519 -N "" -C "gh-runner@ci" -f /home/runner/.ssh/id_ed25519 && install -d -m 700 -o runner -g runner /home/runner/.config/ci'
+pct exec 9050 -- cat /home/runner/.ssh/id_ed25519.pub
+```
+
+Move the API token into the container, then remove the host copy:
+
+```bash
+pct push 9050 /root/ci-runner-token /home/runner/.config/ci/pve-token --perms 0600
+pct exec 9050 -- chown runner:runner /home/runner/.config/ci/pve-token
+shred -u /root/ci-runner-token
+```
+
+Install the GitHub runner agent. Find the version and its SHA-256 on
+<https://github.com/actions/runner/releases/latest> (the release notes list a
+checksum per platform; use `linux-x64`):
+
+```bash
+pct exec 9050 -- bash -c '
+  cd /home/runner && mkdir -p actions-runner && cd actions-runner
+  curl -fsSL -o /tmp/runner.tgz https://github.com/actions/runner/releases/download/v<VERSION>/actions-runner-linux-x64-<VERSION>.tar.gz
+  echo "<SHA256>  /tmp/runner.tgz" | sha256sum -c
+  tar xzf /tmp/runner.tgz && rm /tmp/runner.tgz
+  chown -R runner:runner /home/runner/actions-runner
+  ./bin/installdependencies.sh'
+```
+
+Register it with the repo. The registration token comes from the repo's
+**Settings → Actions → Runners → New self-hosted runner** page (or
+`gh api -X POST repos/leewiscovitch/wiscovitch-install/actions/runners/registration-token --jq .token`)
+and expires after an hour:
+
+```bash
+pct exec 9050 -- sudo -u runner bash -c 'cd ~/actions-runner && ./config.sh --unattended --replace \
+  --url https://github.com/leewiscovitch/wiscovitch-install --token <REGISTRATION TOKEN> \
+  --name wiscotrash-ci --labels proxmox --work _work'
+pct exec 9050 -- bash -c 'cd /home/runner/actions-runner && ./svc.sh install runner && ./svc.sh start'
+```
+
+The runner then shows as **Idle** under Settings → Actions → Runners. Only
+workflow jobs with `runs-on: [self-hosted, proxmox]` go to it.
+
+To remove it: `./svc.sh stop && ./svc.sh uninstall` and `./config.sh remove --token <REMOVAL TOKEN>`
+in the container, then `pct destroy 9050`.
