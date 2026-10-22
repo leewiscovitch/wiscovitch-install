@@ -276,13 +276,19 @@ about 40 minutes by [`windows/build.sh`](windows/build.sh):
   activate), GPT partitions, local admin `tech`, VirtIO disk and network drivers
   from `virtio-win.iso`, and the Windows 11 CPU check bypassed (this host's Ivy
   Bridge Xeon isn't on Microsoft's list).
-- [`windows/setup.ps1`](windows/setup.ps1) runs at first logon: installs all
-  VirtIO drivers and the QEMU guest agent, turns off sleep, installs OpenSSH
-  Server with only the runner's key in `administrators_authorized_keys`, opens
-  SSH in the firewall (see below), and shuts down.
+- [`windows/setup.ps1`](windows/setup.ps1) runs at first logon, in `tech`'s
+  desktop session: installs all VirtIO drivers and the QEMU guest agent, turns off
+  sleep, turns on **auto-login** for `tech`, installs a current **App Installer**
+  (winget) from Microsoft's release and re-registers it from its manifest, installs
+  OpenSSH Server from the **Win32-OpenSSH MSI** with only the runner's key in
+  `administrators_authorized_keys`, opens SSH in the firewall (see below), and
+  shuts down. Download URLs and SHA-256s are pinned in the script; keep the
+  OpenSSH one in sync with `openssh_msi` in `_config.yml`.
 - `tech`'s password is random, generated on the host, and stored only in the
   runner at `/home/runner/.config/ci/win-password` (for console or RDP logins;
   tests use the SSH key). The answer-file ISO that contained it is deleted.
+  Auto-login keeps it in the registry (`Winlogon\DefaultPassword`), which is
+  acceptable for a throwaway test VM but not for a real machine.
 - No sysprep: clones share the machine SID and computer name (`ci-win11`), which
   is harmless for throwaway test VMs; each clone gets its own MAC and DHCP lease.
 
@@ -300,6 +306,27 @@ To watch progress, use the VM's console in the web UI.
 allows Private, so SSH is unreachable from the LAN out of the box. `setup.ps1`
 marks the network Private and allows the rule on any profile. The Windows page's
 SSH step does the same, a bug this template found.
+
+**Desktop session:** several Windows steps can't run from an SSH (network) login:
+the `winget` command, MSIX/Store installs, Windows Update installs, and
+restarting Explorer. With auto-login, `tech` always has a desktop session, and
+[`tests/windows_desktop_task.ps1`](../tests/windows_desktop_task.ps1) runs a
+script inside it from SSH: it registers a one-off scheduled task with an
+*Interactive* principal, waits, and returns the output. The VM test runs the
+whole Windows page this way, like pasting it into Terminal. It also works on a
+physical machine while someone is logged in at the screen or over RDP.
+
+**winget repair:** a background Store update of App Installer once left winget's
+command shortcut pointing at a missing path ("The file cannot be accessed by the
+system", then "The system cannot find the path specified"). Re-registering the
+package from its manifest fixes it:
+
+```powershell
+$ai = Get-AppxPackage -Name Microsoft.DesktopAppInstaller | Sort-Object Version | Select-Object -Last 1
+Add-AppxPackage -Register (Join-Path $ai.InstallLocation 'AppxManifest.xml') -DisableDevelopmentMode -ForceApplicationShutdown
+```
+
+The VM test does this before each run as a precaution.
 
 **Running commands over SSH:** the default SSH shell on the template is
 `cmd.exe`, which mangles PowerShell quoting. Send PowerShell as

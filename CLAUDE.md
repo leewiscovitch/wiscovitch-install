@@ -40,6 +40,8 @@ When adding a step that can't run in CI, add a skip rule in the runner with a re
 
 `proxmox/` holds the homelab VM-test setup (self-hosted runner + cloud-init templates); `proxmox/README.md` is the step-by-step build log, kept runnable by hand. Host-specific values go in gitignored `proxmox/config.env` and `CLAUDE.local.md`, never in the repo. `proxmox/vm.sh` (clone/start/ip/reboot/destroy via the API) and `proxmox/smoke-test.sh` run on the runner container; copy them there after changing them.
 
+Windows VM tests (`tests/run_vm_windows.sh`) run the page **inside tech's desktop session** (`-Target desktop`) via `tests/windows_desktop_task.ps1`: the template auto-logs in, and the helper runs a script through a scheduled task with an Interactive principal. That's required for the `winget` command, MSIX installs and Explorer, none of which work from an SSH (network) logon. If no session is active it falls back to plain SSH (`-Target vm`), which skips plain `winget` blocks in favour of the page's "Over SSH" block. The same script tests a physical machine with `host:<IP>` while someone is logged in (console or RDP). Windows Update install and `Restart-Computer` are skipped in every mode; the test reboots separately.
+
 ## Checking changes
 
 Ruby/Jekyll isn't installed locally and includes/data only render under real Jekyll, so push and check the live site. Test copy over `http(s)://`, not a `file:`/`data:` URL: those can't reach the system clipboard.
