@@ -86,7 +86,10 @@ Install all Windows updates, including drivers and other Microsoft products, reb
 ```powershell
 while ((Get-Service wuauserv).Status -eq 'StopPending') { Start-Sleep 2 }; Start-Service wuauserv
 Get-WindowsUpdate -MicrosoftUpdate -Install -AcceptAll -AutoReboot
+UsoClient StartInteractiveScan
 ```
+
+The last line refreshes the list in **Settings → Windows Update**, which otherwise keeps showing updates from its previous scan even after they're installed here. It prints nothing and returns at once. Like **Check for updates**, the scan may start downloading anything new it finds.
 
 To see what's pending without installing anything:
 
@@ -95,7 +98,7 @@ while ((Get-Service wuauserv).Status -eq 'StopPending') { Start-Sleep 2 }; Start
 Get-WindowsUpdate -MicrosoftUpdate
 ```
 
-If **Settings → Windows Update** still lists updates after the command line finds nothing, the list is from an earlier scan (Settings doesn't refresh it after command-line installs). Click **Check for updates**, or run `UsoClient StartInteractiveScan`, and it clears. `Get-WUHistory -Last 30` shows what was installed (times are in UTC).
+`Get-WUHistory -Last 30` lists what was installed (times are in UTC).
 
 **Update for Windows Security platform (KB5007651)** can show up again on every run, even though each run reports it as installed. Once it's the only thing left, Windows is up to date; it stops appearing after the Security app updates itself through the Store.
 
