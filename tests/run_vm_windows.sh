@@ -49,7 +49,9 @@ fi
 setup_note="VM $id at $ip, $(echo '$o = Get-CimInstance Win32_OperatingSystem; "$($o.Caption) build $($o.BuildNumber)"' | PS 2>/dev/null | tr -d '\r')"
 
 # Copy blocks and the runner script to the VM, run them there, copy results back
-echo 'New-Item -ItemType Directory -Force C:\ci | Out-Null' | PS >/dev/null
+# Start from an empty C:\ci: on a reused machine, `scp -r` into an existing C:\ci\blocks
+# nests the new blocks inside it, and the previous run's blocks would run instead.
+echo 'Remove-Item C:\ci -Recurse -Force -ErrorAction Ignore; New-Item -ItemType Directory -Force C:\ci | Out-Null' | PS >/dev/null
 scp -q "${SSH_OPTS[@]}" -r "$dir" "tech@$ip:C:/ci/blocks"
 scp -q "${SSH_OPTS[@]}" "$here/run_windows.ps1" "$here/check_windows.ps1" "$here/windows_desktop_task.ps1" "tech@$ip:C:/ci/"
 
