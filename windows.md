@@ -274,6 +274,19 @@ powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE
 powercfg /query SCHEME_CURRENT 4f971e89-eebd-4455-a8de-9e59040e7347 5ca83367-6e45-459f-a27b-476b1d01c936
 ```
 
+**Microsoft Edge:** skip the first-run setup (no welcome pages, no sign-in prompt, no importing other browsers' data) and hide the Copilot button and the sidebar. These are machine-wide Edge policies, so Edge will say "Your browser is managed by your organization"; `edge://policy` lists them. They apply the next time Edge starts:
+
+```powershell
+$p = "HKLM:\SOFTWARE\Policies\Microsoft\Edge"
+if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
+Set-ItemProperty -Path $p -Name HideFirstRunExperience -Type DWord -Value 1               # no first-run setup
+Set-ItemProperty -Path $p -Name AutoImportAtFirstRun -Type DWord -Value 4                 # don't import from other browsers
+Set-ItemProperty -Path $p -Name Microsoft365CopilotChatIconEnabled -Type DWord -Value 0   # no Copilot button
+Set-ItemProperty -Path $p -Name HubsSidebarEnabled -Type DWord -Value 0                   # no sidebar
+```
+
+**Edge search engine:** set it by hand. The policy for it only works on PCs joined to a domain or managed by an organization. Open `edge://settings/search` in Edge (type it in the address bar; links to `edge://` pages don't work from websites) and set **Search engine used in the address bar** to **Google**.
+
 Restart Explorer to apply the theme and Alt+Tab changes now (the taskbar disappears for a moment). The touchpad change applies after you sign out and back in:
 
 ```powershell
