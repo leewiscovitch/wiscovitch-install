@@ -8,6 +8,7 @@
 #   vm.sh ip VMID [TIMEOUT_S]      -> waits for the guest agent, prints the first LAN IPv4
 #   vm.sh reboot VMID
 #   vm.sh destroy VMID             -> stops and deletes the VM and its disks
+#   vm.sh list                     -> "VMID NAME STATUS" for test VMs (not templates) in the pool
 #
 # Settings: PVE_HOST (default 192.168.1.11), PVE_NODE (default wiscotrash),
 # PVE_TOKEN_FILE (default ~/.config/ci/pve-token, containing TOKENID=SECRET).
@@ -72,6 +73,8 @@ case $cmd in
     id=$1
     api POST "/nodes/$PVE_NODE/qemu/$id/status/stop" >/dev/null 2>&1 && sleep 3 || true
     wait_task "$(api DELETE "/nodes/$PVE_NODE/qemu/$id?purge=1&destroy-unreferenced-disks=1")" ;;
+  list)
+    api GET "/pools/ci" | jq -r '.members[] | select(.type == "qemu" and .template != 1) | "\(.vmid) \(.name) \(.status)"' ;;
   *)
-    sed -n '2,12p' "$0"; exit 2 ;;
+    sed -n '2,13p' "$0"; exit 2 ;;
 esac

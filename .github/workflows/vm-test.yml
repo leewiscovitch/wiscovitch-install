@@ -1,0 +1,76 @@
+# Runs each Linux page on a fresh Proxmox VM in the homelab, reboots it, and checks
+# that the page's changes survived. Uses the self-hosted runners in CT 9050 (see
+# proxmox/README.md). Blocks come from the live site, like the container tests.
+#
+# Only runs for pushes by the repo owner (and manual runs). There is deliberately
+# no pull_request trigger: code from other people never runs on this hardware.
+name: VM tests (Proxmox)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One VM-test run at a time; a newer push cancels the older run
+concurrency:
+  group: vm-tests
+  cancel-in-progress: true
+
+env:
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  cleanup:
+    name: Remove leftover test VMs
+    if: github.actor == 'leewiscovitch'
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Destroy test VMs from earlier runs
+        run: |
+          proxmox/vm.sh list | while read -r id name status; do
+            case $name in
+              vmtest-${{ github.run_id }}-*) ;;
+              vmtest-*|smoke-*|race-*) echo "destroying $id $name ($status)"; proxmox/vm.sh destroy "$id" ;;
+            esac
+          done
+
+  test:
+    needs: cleanup
+    name: ${{ matrix.page }} on ${{ matrix.os }}
+    runs-on: [self-hosted, proxmox]
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - { page: /ubuntu/server/, os: "Ubuntu 26.04", template: 9000 }
+          - { page: /fedora/, os: "Fedora 44", template: 9001 }
+          - { page: /alma/, os: "AlmaLinux 9", template: 9002 }
+          - { page: /alma/, os: "AlmaLinux 10 (x86_64_v2)", template: 9003 }
+          - { page: /alma/, os: "Rocky Linux 9", template: 9004 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for the published site and extract blocks
+        run: |
+          rm -rf blocks
+          python3 tests/extract.py --wait "$GITHUB_SHA" "${{ matrix.page }}" blocks
+
+      - name: Run the page on a fresh VM, reboot, verify
+        run: bash tests/run_vm.sh ${{ matrix.template }} "vmtest-${{ github.run_id }}-${{ strategy.job-index }}" blocks
+
+      - name: Report
+        if: always()
+        run: python3 tests/summarize.py blocks "${{ matrix.page }} on ${{ matrix.os }} (Proxmox VM)"
+
+      - name: Keep blocks and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vm-blocks-${{ strategy.job-index }}
+          path: blocks/
