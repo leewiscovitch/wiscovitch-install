@@ -24,8 +24,10 @@ jobs:
           - { page: /ubuntu/desktop/, image: "ubuntu:26.04" }
           - { page: /ubuntu/server/, image: "ubuntu:26.04" }
           - { page: /fedora/, image: "fedora:latest" }
-          - { page: /alma/, image: "almalinux:latest" }
-          - { page: /alma/, image: "rockylinux:9" }
+          - { page: /alma/, image: "almalinux:9" }
+          - { page: /alma/, image: "almalinux:10" }
+          - { page: /alma/, image: "rockylinux/rockylinux:9" }
+          - { page: /alma/, image: "rockylinux/rockylinux:10" }
           - { page: /cachyos/, image: "archlinux:latest" }
     steps:
       - uses: actions/checkout@v4

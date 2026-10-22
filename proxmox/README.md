@@ -60,8 +60,10 @@ against its published SHA-256. Cloud images go to `/var/lib/vz/import`
 | Ubuntu 26.04 Desktop | `ubuntu-26.04-desktop-amd64.iso` (already on the host) | one-time manual install |
 | Fedora 44 | `Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2` | cloud-init template |
 | Fedora 44 Workstation | `Fedora-Workstation-Live-44-1.7.x86_64.iso` | one-time manual install |
+| AlmaLinux 9 | `AlmaLinux-9-GenericCloud-latest.x86_64.qcow2` | cloud-init template |
 | AlmaLinux 10 | `AlmaLinux-10-GenericCloud-latest.x86_64.qcow2` | cloud-init template |
 | Rocky Linux 9 | `Rocky-9-GenericCloud-Base.latest.x86_64.qcow2` | cloud-init template |
+| Rocky Linux 10 | `Rocky-10-GenericCloud-Base.latest.x86_64.qcow2` | cloud-init template |
 | CachyOS | `cachyos-desktop-linux-260809.iso` | one-time manual install |
 | Windows 11 | multi-edition ISO from microsoft.com | unattended install |
 | Runner | `debian-13-standard_13.6-1_amd64.tar.zst` (`pveam download local …`) | GitHub runner container |
@@ -70,8 +72,8 @@ against its published SHA-256. Cloud images go to `/var/lib/vz/import`
 Sources:
 
 - Fedora: <https://fedoraproject.org/releases.json> lists each image's URL and SHA-256.
-- AlmaLinux: <https://repo.almalinux.org/almalinux/10/cloud/x86_64/images/> (`CHECKSUM` file).
-- Rocky Linux: <https://dl.rockylinux.org/pub/rocky/9/images/x86_64/> (`<image>.CHECKSUM`). Rocky 10 images are in `…/rocky/10/…`.
+- AlmaLinux: <https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/> and `…/10/…` (`CHECKSUM` file).
+- Rocky Linux: <https://dl.rockylinux.org/pub/rocky/9/images/x86_64/> and `…/rocky/10/…` (`<image>.CHECKSUM`).
 - CachyOS: <https://cachyos.org/download/> (`<iso>.sha256` next to each ISO).
 
 Download and verify one by hand, e.g. Fedora Cloud:
