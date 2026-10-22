@@ -60,6 +60,12 @@ Get-ExecutionPolicy -List
 
 {% include timezone.md %}
 
+## Remove apps
+
+Do this before **Update**, so the updates don't spend time upgrading apps that are about to be removed.
+
+{% include remove.md %}
+
 ## Update
 
 Install the PSWindowsUpdate module (once per machine):
@@ -169,10 +175,6 @@ Check the version from a new Terminal tab:
 ```powershell
 $PSVersionTable.PSVersion
 ```
-
-## Remove apps
-
-{% include remove.md %}
 
 ## Settings
 
