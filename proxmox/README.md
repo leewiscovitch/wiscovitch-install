@@ -221,7 +221,7 @@ The same steps by hand, for one template:
 
 ```bash
 qm create 9002 --name tpl-alma-9 --pool ci --ostype l26 --machine q35 --cpu host \
-  --cores 2 --memory 4096 --balloon 0 --scsihw virtio-scsi-single \
+  --cores 4 --memory 8192 --balloon 0 --scsihw virtio-scsi-single \
   --net0 virtio,bridge=vmbr0 --agent enabled=1 --serial0 socket --vga serial0
 qm set 9002 --scsi0 local-lvm:0,import-from=/var/lib/vz/import/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2,discard=on,ssd=1
 qm disk resize 9002 scsi0 20G

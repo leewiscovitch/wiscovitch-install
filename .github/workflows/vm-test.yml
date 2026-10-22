@@ -30,6 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Destroy test VMs from earlier runs
+        shell: bash   # adds -o pipefail, so a failing `vm.sh list` fails the step
         run: |
           proxmox/vm.sh list | while read -r id name status; do
             case $name in

@@ -58,7 +58,7 @@ build() {
   [ -f "$img" ] || { log "$id $name: image not found: $img"; return 1; }
   log "$id $name: creating from $(basename "$img")"
   qm create "$id" --name "$name" --pool $POOL --ostype l26 --machine q35 --cpu host \
-    --cores 2 --memory 4096 --balloon 0 --scsihw virtio-scsi-single \
+    --cores 4 --memory 8192 --balloon 0 --scsihw virtio-scsi-single \
     --net0 virtio,bridge=$BRIDGE --agent enabled=1 --serial0 socket --vga serial0 \
     --description "Template for install.wiscovitch.org VM tests (proxmox/build-templates.sh)"
   qm set "$id" --scsi0 "$STORAGE:0,import-from=$img,discard=on,ssd=1" >/dev/null

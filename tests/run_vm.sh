@@ -52,7 +52,7 @@ add reboot pass "back up, uptime $(S 'cut -d. -f1 /proc/uptime')s"
 check() {   # check NAME DESCRIPTION REMOTE_COMMAND
     if S "$3" > "$dir/check-$1.log" 2>&1; then add "check-$1" pass "$2"; else add "check-$1" fail "$2"; fi
 }
-check sudoers      "passwordless sudo from /etc/sudoers.d/tech" 'test -f /etc/sudoers.d/tech && sudo -n true'
+check sudoers      "passwordless sudo from /etc/sudoers.d/tech" 'sudo -n test -f /etc/sudoers.d/tech'   # /etc/sudoers.d is root-only
 check timezone     "time zone is America/New_York"              'test "$(timedatectl show -p Timezone --value)" = America/New_York'
 check ntp          "network time sync on"                        'test "$(timedatectl show -p NTP --value)" = yes'
 check sshd         "SSH server enabled and running"              'systemctl is-enabled ssh 2>/dev/null || systemctl is-enabled sshd; systemctl is-active ssh 2>/dev/null || systemctl is-active sshd'
