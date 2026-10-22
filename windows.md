@@ -41,6 +41,7 @@ remove:
       - { id: Microsoft.MicrosoftStickyNotes, name: Sticky Notes }
       - { id: Microsoft.WindowsSoundRecorder, name: Sound Recorder }
       - { id: MicrosoftCorporationII.MicrosoftFamily, name: Family }
+      - { id: Microsoft.ZuneMusic, name: Media Player }
 ---
 
 ## Before you start

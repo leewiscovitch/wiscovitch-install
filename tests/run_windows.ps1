@@ -67,7 +67,9 @@ foreach ($f in Get-ChildItem -Path $Dir -Filter *.powershell | Sort-Object Name)
         [void]$sb.AppendLine("if (`$LASTEXITCODE -and `$okCodes -notcontains `$LASTEXITCODE) { `$nativeFailures += 'exit ' + `$LASTEXITCODE + ' from: $label' }")
     }
     [void]$sb.AppendLine('if ($nativeFailures) { $nativeFailures | ForEach-Object { "NATIVE FAILURE: $_" }; exit 3 }')
-    [void]$sb.AppendLine('if ($Error.Count) { "POWERSHELL ERRORS: $($Error.Count)"; exit 2 }')
+    # $Error also holds errors that cmdlets and modules hid with -ErrorAction SilentlyContinue,
+    # so print each one with where it came from, to tell real failures from hidden noise
+    [void]$sb.AppendLine('if ($Error.Count) { "POWERSHELL ERRORS: $($Error.Count)"; $Error | ForEach-Object { "  $($_.ToString()) (from $($_.InvocationInfo.MyCommand))" }; exit 2 }')
     [void]$sb.AppendLine('exit 0')
 
     $script = Join-Path $tmp "$name.ps1"
