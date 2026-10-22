@@ -68,11 +68,12 @@ Do this before **Update**, so the updates don't spend time upgrading apps that a
 
 ## Update
 
-Install the PSWindowsUpdate module (once per machine):
+Install the PSWindowsUpdate module (once per machine). It's downloaded straight from the PowerShell Gallery, pinned and checksum-checked like the MSIs below, so it doesn't need `Install-Module`, the NuGet provider or the Gallery's search:
 
 ```powershell
-Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-Install-Module -Name PSWindowsUpdate -Scope AllUsers -Force
+{% include ps-module.md name="PSWindowsUpdate" %}
+Import-Module PSWindowsUpdate
+Get-Module PSWindowsUpdate
 ```
 
 Install all Windows updates, including drivers and other Microsoft products, rebooting automatically if needed. Run it again after each reboot until it finds nothing. The first line starts the Windows Update service, which stops itself when idle and can't be started while it's still stopping (common right after first boot):
@@ -111,8 +112,7 @@ if (-not (Test-Path $pwsh)) {
     if ((Get-FileHash $msi -Algorithm SHA256).Hash -ne '{{ site.pwsh_msi.sha256 }}') { throw 'PowerShell MSI checksum mismatch; not installing.' }
     Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait
 }
-Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
-Install-Module -Name Microsoft.WinGet.Client -Scope AllUsers -Force
+{% include ps-module.md name="Microsoft.WinGet.Client" %}
 $ids = @({% assign first = true %}{% for p in page.packages %}{% unless p == 'Microsoft.WindowsTerminal' %}{% unless first %}, {% endunless %}'{{ p }}'{% assign first = false %}{% endunless %}{% endfor %})
 $script = "$env:ProgramData\winget-over-ssh.ps1"
 $log = "$env:ProgramData\winget-over-ssh.log"

@@ -21,6 +21,18 @@ pwsh_msi:
   version: 7.6.7
   url: https://github.com/PowerShell/PowerShell/releases/download/v7.6.7/PowerShell-7.6.7-win-x64.msi
   sha256: EC575CEF9EC56FCD905DE0D5EEAC9CB7F81A0A65ABB87BB5CD0E87FDFE2B8CC0
+
+# Pinned PowerShell Gallery modules, downloaded as .nupkg (a zip) from
+# https://www.powershellgallery.com/api/v2/package/<name>/<version> and unzipped into
+# Program Files, so steps don't depend on Install-Module, NuGet or the Gallery's search.
+# To update: new version plus the SHA-256 of that download. Also read by test.yml.
+ps_modules:
+  PSWindowsUpdate:
+    version: 2.2.1.5
+    sha256: 174E05B1C194377F8D9AE0B004C93304C662EA9B5FC4DAFA19426049D2D5CF50
+  Microsoft.WinGet.Client:
+    version: 1.29.380
+    sha256: 3469E5747EB6B100E51FED3F2057386B5BA60BC8955A6669B5C2EB562E316619
 markdown: kramdown
 kramdown:
   input: GFM

@@ -62,8 +62,15 @@ jobs:
       - name: Make sure winget is available
         run: |
           if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-              Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
-              Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery | Out-Null
+              # Same pinned module download as the page (ps_modules in _config.yml), not Install-Module
+              $name = 'Microsoft.WinGet.Client'
+              if ((Get-Content _config.yml -Raw) -notmatch "(?m)^  $([regex]::Escape($name)):\s*\r?\n\s+version: (\S+)\s*\r?\n\s+sha256: (\S+)") { throw "$name not found in _config.yml" }
+              $version, $sha256 = $Matches[1], $Matches[2]
+              $zip = "$env:TEMP\$name.$version.zip"
+              Invoke-WebRequest "https://www.powershellgallery.com/api/v2/package/$name/$version" -OutFile $zip
+              if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne $sha256) { throw "$name checksum mismatch" }
+              Expand-Archive $zip -DestinationPath "$env:ProgramFiles\WindowsPowerShell\Modules\$name\$version" -Force
+              Import-Module $name
               Repair-WinGetPackageManager -AllUsers -Latest
           }
           winget --version
