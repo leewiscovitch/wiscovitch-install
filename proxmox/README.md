@@ -180,3 +180,69 @@ workflow jobs with `runs-on: [self-hosted, proxmox]` go to it.
 
 To remove it: `./svc.sh stop && ./svc.sh uninstall` and `./config.sh remove --token <REMOVAL TOKEN>`
 in the container, then `pct destroy 9050`.
+
+## 5. Cloud-image templates
+
+| VMID | Name | Image |
+|---|---|---|
+| 9000 | `tpl-ubuntu-2604` | Ubuntu 26.04 Server cloud image |
+| 9001 | `tpl-fedora-44` | Fedora 44 Cloud Base |
+| 9002 | `tpl-alma-9` | AlmaLinux 9 GenericCloud |
+| 9003 | `tpl-alma-10-v2` | AlmaLinux 10 GenericCloud, **x86_64_v2** build |
+| 9004 | `tpl-rocky-9` | Rocky Linux 9 GenericCloud |
+
+**CPU note:** this host's Xeon E5-2697 v2 (Ivy Bridge) supports x86-64-v2 but
+not v3 (no AVX2). The RHEL 10 family requires v3, so the standard AlmaLinux 10
+and Rocky Linux 10 images can't boot here. AlmaLinux publishes an x86_64_v2
+build, used above; Rocky 10 has none, so it's only tested in the GitHub
+container job (GitHub's CPUs support v3). On a newer host, use the standard
+images.
+
+Each template is the distro's cloud image as the disk (resized to 20 GB), with
+cloud-init creating user `tech` (passwordless sudo) and the runner's SSH key.
+On a first boot it installs the QEMU guest agent, so the runner can read a
+clone's IP, then clears `/etc/machine-id`, so clones running side by side get
+distinct DHCP leases, and powers off. The first-boot script is removed before
+the VM is converted to a template.
+
+[`build-templates.sh`](build-templates.sh) does all of this. Copy it to the host
+and run it as root; with no arguments it builds every template, or pass VMIDs.
+It never overwrites an existing VMID; `qm destroy <VMID>` first to rebuild.
+
+```bash
+scp proxmox/build-templates.sh root@<PROXMOX HOST>:/root/
+ssh root@<PROXMOX HOST> /root/build-templates.sh
+```
+
+It also enables the `snippets` content type on `local` storage, where the
+first-boot cloud-init file (`ci-template-firstboot.yaml`) lives.
+
+The same steps by hand, for one template:
+
+```bash
+qm create 9002 --name tpl-alma-9 --pool ci --ostype l26 --machine q35 --cpu host \
+  --cores 2 --memory 4096 --balloon 0 --scsihw virtio-scsi-single \
+  --net0 virtio,bridge=vmbr0 --agent enabled=1 --serial0 socket --vga serial0
+qm set 9002 --scsi0 local-lvm:0,import-from=/var/lib/vz/import/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2,discard=on,ssd=1
+qm disk resize 9002 scsi0 20G
+qm set 9002 --ide2 local-lvm:cloudinit --boot order=scsi0 --ciuser tech \
+  --sshkeys /root/ci-runner.pub --ipconfig0 ip=dhcp --ciupgrade 0 \
+  --cicustom vendor=local:snippets/ci-template-firstboot.yaml
+qm start 9002          # wait until `qm status 9002` says stopped
+qm set 9002 --delete cicustom
+qm template 9002
+```
+
+### Checking a template
+
+[`vm.sh`](vm.sh) manages test VMs through the API with the runner's limited
+token (clone, start, IP, reboot, destroy). [`smoke-test.sh`](smoke-test.sh)
+uses it to clone each template, boot it, SSH in as `tech`, reboot, and destroy
+it. Both live in `/home/runner` on the runner:
+
+```bash
+pct exec 9050 -- sudo -u runner /home/runner/smoke-test.sh 9000 9001 9002 9003 9004
+```
+
+A clone takes about 2 s, boots to SSH in about 25 s, and a full check with a
+reboot takes under a minute.

@@ -36,6 +36,10 @@ The script tries `navigator.clipboard.writeText`, falls back to a hidden textare
 
 When adding a step that can't run in CI, add a skip rule in the runner with a reason rather than weakening the step on the page. Placeholders like `<NAME>` break PowerShell parsing (`<` is reserved); describe them in text instead of inside a PowerShell block.
 
+## Proxmox VM tests
+
+`proxmox/` holds the homelab VM-test setup (self-hosted runner + cloud-init templates); `proxmox/README.md` is the step-by-step build log, kept runnable by hand. Host-specific values go in gitignored `proxmox/config.env` and `CLAUDE.local.md`, never in the repo. `proxmox/vm.sh` (clone/start/ip/reboot/destroy via the API) and `proxmox/smoke-test.sh` run on the runner container; copy them there after changing them.
+
 ## Checking changes
 
 Ruby/Jekyll isn't installed locally and includes/data only render under real Jekyll, so push and check the live site. Test copy over `http(s)://`, not a `file:`/`data:` URL: those can't reach the system clipboard.
