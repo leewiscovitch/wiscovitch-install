@@ -19,10 +19,11 @@ add() { printf '%s\t%s\t%s\n' "$1" "$2" "$3" >> "$results"; }
 SSH_OPTS=(-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes -o ConnectTimeout=5 -o LogLevel=ERROR -o ServerAliveInterval=30)
 # Run PowerShell on the VM from stdin. The SSH default shell is cmd.exe at first (the
 # page switches it to pwsh), so send it Base64-encoded to avoid any shell quoting.
+# -ExecutionPolicy Bypass: a fresh Windows 11 is Restricted until the page's first step.
 PS() {
     local b64
     b64=$(python3 -c 'import sys,base64; print(base64.b64encode(sys.stdin.read().encode("utf-16-le")).decode())')
-    ssh -n "${SSH_OPTS[@]}" "tech@$ip" "powershell -NoProfile -NonInteractive -EncodedCommand $b64"
+    ssh -n "${SSH_OPTS[@]}" "tech@$ip" "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand $b64"
 }
 wait_ssh() { for _ in $(seq 1 90); do echo 'exit 0' | PS >/dev/null 2>&1 && return 0; sleep 5; done; return 1; }
 
