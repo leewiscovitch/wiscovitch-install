@@ -21,8 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { page: /ubuntu/desktop/, image: "ubuntu:24.04" }
-          - { page: /ubuntu/server/, image: "ubuntu:24.04" }
+          - { page: /ubuntu/desktop/, image: "ubuntu:26.04" }
+          - { page: /ubuntu/server/, image: "ubuntu:26.04" }
           - { page: /fedora/, image: "fedora:latest" }
           - { page: /alma/, image: "almalinux:latest" }
           - { page: /alma/, image: "rockylinux:9" }
