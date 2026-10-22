@@ -1,15 +1,17 @@
 # Run the Windows page's PowerShell blocks, in order, on a fresh Windows machine.
 #
-# Usage: run_windows.ps1 -Dir BLOCKDIR [-Target ci|vm]
-#   ci  GitHub's Windows Server runner (default)
-#   vm  a real Windows 11 VM on Proxmox, run over SSH by tests/run_vm_windows.sh
+# Usage: run_windows.ps1 -Dir BLOCKDIR [-Target ci|vm|desktop]
+#   ci       GitHub's Windows Server runner (default)
+#   vm       a real Windows 11 machine, run directly over SSH (no desktop session)
+#   desktop  a real Windows 11 machine, run inside the user's desktop session
+#            (via tests/windows_desktop_task.ps1), like pasting into Terminal
 #
 # Each block runs in its own Windows PowerShell 5.1 process, like a fresh paste.
 # A block fails if it writes a PowerShell error, or if any of its statements leaves
 # a non-zero native exit code, except winget codes that only mean "already
 # installed" / "nothing to upgrade" / "not installed".
 # Results go to BLOCKDIR\results.tsv (name, status, note) and BLOCKDIR\NNN.log.
-param([Parameter(Mandatory)] [string] $Dir, [ValidateSet('ci', 'vm')] [string] $Target = 'ci',
+param([Parameter(Mandatory)] [string] $Dir, [ValidateSet('ci', 'vm', 'desktop')] [string] $Target = 'ci',
       [string] $GitName = 'CI Test', [string] $GitEmail = 'ci@example.com')
 
 $results = Join-Path $Dir 'results.tsv'
@@ -18,13 +20,13 @@ Set-Content -Path $results -Value $null -Encoding utf8
 # Blocks that can't run here, with the reason shown in the report
 $skip = [ordered]@{
     'Get-WindowsUpdate[^\r\n]*-Install' = 'installs updates and reboots (30+ min)'
-    'Stop-Process -Name explorer'       = 'no desktop session over SSH'
     'Restart-Computer'                  = 'the test reboots separately and checks afterwards'
 }
+if ($Target -ne 'desktop') { $skip['Stop-Process -Name explorer'] = 'no desktop session' }
 if ($Target -eq 'ci') {
     $skip['UpdateScanMethod'] = 'Windows Server has no Microsoft Store'
     $skip['winget upgrade --all'] = 'would upgrade every tool on the CI image (install steps exercise winget)'
-} else {
+} elseif ($Target -eq 'vm') {
     # Over SSH the winget command can't start (no desktop session); the page's
     # "Over SSH" install block covers the same packages and is run instead.
     $skip['(?m)^winget '] = 'winget command needs a desktop session (Over SSH block runs instead)'

@@ -51,12 +51,39 @@ setup_note="VM $id at $ip, $(echo '$o = Get-CimInstance Win32_OperatingSystem; "
 # Copy blocks and the runner script to the VM, run them there, copy results back
 echo 'New-Item -ItemType Directory -Force C:\ci | Out-Null' | PS >/dev/null
 scp -q "${SSH_OPTS[@]}" -r "$dir" "tech@$ip:C:/ci/blocks"
-scp -q "${SSH_OPTS[@]}" "$here/run_windows.ps1" "$here/check_windows.ps1" "tech@$ip:C:/ci/"
-# winget's catalog is a per-user package that Windows normally sets up in a desktop
-# session; over SSH winget fails with 0x8A15000F until it's added by hand. Test-only.
-echo '$ProgressPreference = "SilentlyContinue"; Add-AppxPackage -Path https://cdn.winget.microsoft.com/cache/source.msix' | PS >/dev/null 2>&1
-echo "running the Windows page on VM $id"
-echo "& C:\ci\run_windows.ps1 -Dir C:\ci\blocks -Target vm -GitName $(psq "$GIT_NAME") -GitEmail $(psq "$GIT_EMAIL")" | PS > "$dir/run_windows.log" 2>&1
+scp -q "${SSH_OPTS[@]}" "$here/run_windows.ps1" "$here/check_windows.ps1" "$here/windows_desktop_task.ps1" "tech@$ip:C:/ci/"
+
+# Prefer running the page inside tech's desktop session (auto-login on the VM template;
+# console or RDP on a physical machine), exactly like pasting into Terminal. Without a
+# session, fall back to plain SSH, where winget/MSIX/Explorer steps can't run.
+session=
+for _ in $(seq 1 30); do
+    session=$(echo '(quser 2>$null | Select-String -Pattern "^\s*>?tech\s+(console|rdp-tcp#\d+)\s+\d+\s+Active").Matches.Count' | PS 2>/dev/null | tr -d '\r' | tail -1)
+    [ "${session:-0}" -ge 1 ] 2>/dev/null && break
+    sleep 10
+done
+run_args="-GitName $(psq "$GIT_NAME") -GitEmail $(psq "$GIT_EMAIL")"
+if [ "${session:-0}" -ge 1 ] 2>/dev/null; then
+    mode=desktop
+    # Test prep: re-register App Installer from its manifest, since a background Store
+    # update can leave winget's command shortcut pointing at a missing path.
+    cat > "$dir/run-page.ps1" <<PSEOF
+\$ai = Get-AppxPackage -Name Microsoft.DesktopAppInstaller | Sort-Object Version | Select-Object -Last 1
+Add-AppxPackage -Register (Join-Path \$ai.InstallLocation 'AppxManifest.xml') -DisableDevelopmentMode -ForceApplicationShutdown -ErrorAction Ignore
+& C:\ci\run_windows.ps1 -Dir C:\ci\blocks -Target desktop $run_args
+PSEOF
+    scp -q "${SSH_OPTS[@]}" "$dir/run-page.ps1" "tech@$ip:C:/ci/"
+    echo "running the Windows page on $id inside tech's desktop session"
+    echo '& C:\ci\windows_desktop_task.ps1 -Script C:\ci\run-page.ps1 -TimeoutMinutes 150' | PS > "$dir/run_windows.log" 2>&1
+else
+    mode=ssh
+    # winget's catalog is a per-user package that Windows normally sets up in a desktop
+    # session; over SSH winget fails with 0x8A15000F until it's added by hand. Test-only.
+    echo '$ProgressPreference = "SilentlyContinue"; Add-AppxPackage -Path https://cdn.winget.microsoft.com/cache/source.msix' | PS >/dev/null 2>&1
+    echo "running the Windows page on $id over SSH (no desktop session)"
+    echo "& C:\ci\run_windows.ps1 -Dir C:\ci\blocks -Target vm $run_args" | PS > "$dir/run_windows.log" 2>&1
+fi
+setup_note="$setup_note; ran in: $mode"
 if scp -q "${SSH_OPTS[@]}" "tech@$ip:C:/ci/blocks/*.log" "tech@$ip:C:/ci/blocks/results.tsv" "$dir/"; then
     # Windows wrote UTF-8 with a BOM and CRLF line endings
     sed -i 's/\r$//; s/^\xEF\xBB\xBF//' "$dir/results.tsv"

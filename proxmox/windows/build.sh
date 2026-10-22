@@ -29,7 +29,7 @@ umask 077
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 sed "s|__PASSWORD__|$pw|g" autounattend.xml > "$work/autounattend.xml"
-cp setup.ps1 "$work/"
+sed "s|__PASSWORD__|$pw|g" setup.ps1 > "$work/setup.ps1"   # auto-login
 pct exec $RUNNER_CT -- cat /home/runner/.ssh/id_ed25519.pub > "$work/runner.pub"
 genisoimage -quiet -J -r -V CI_ANSWER -o "$ISO_DIR/$ANSWER_ISO" "$work"
 printf '%s\n' "$pw" > "$work/win-password"

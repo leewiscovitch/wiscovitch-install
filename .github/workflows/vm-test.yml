@@ -43,7 +43,7 @@ jobs:
     needs: cleanup
     name: ${{ matrix.page }} on ${{ matrix.os }}
     runs-on: [self-hosted, proxmox]
-    timeout-minutes: 90   # Windows: winget upgrade --all and PowerShell 7 take a while
+    timeout-minutes: 180  # Windows runs winget upgrade --all and installs in its desktop session
     strategy:
       fail-fast: false
       max-parallel: 3
