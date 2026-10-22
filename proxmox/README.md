@@ -246,3 +246,64 @@ pct exec 9050 -- sudo -u runner /home/runner/smoke-test.sh 9000 9001 9002 9003 9
 
 A clone takes about 2 s, boots to SSH in about 25 s, and a full check with a
 reboot takes under a minute.
+
+## 6. Windows 11 template
+
+VMID 9010 `tpl-win11`: Windows 11 Pro, UEFI with Secure Boot (Microsoft keys),
+TPM 2.0, q35, 4 vCPU / 8 GB / 64 GB VirtIO disk. Installed fully unattended in
+about 40 minutes by [`windows/build.sh`](windows/build.sh):
+
+- [`windows/autounattend.xml`](windows/autounattend.xml): English, Eastern time,
+  Pro edition (Microsoft's public generic key, which picks the edition but doesn't
+  activate), GPT partitions, local admin `tech`, VirtIO disk and network drivers
+  from `virtio-win.iso`, and the Windows 11 CPU check bypassed (this host's Ivy
+  Bridge Xeon isn't on Microsoft's list).
+- [`windows/setup.ps1`](windows/setup.ps1) runs at first logon: installs all
+  VirtIO drivers and the QEMU guest agent, turns off sleep, installs OpenSSH
+  Server with only the runner's key in `administrators_authorized_keys`, opens
+  SSH in the firewall (see below), and shuts down.
+- `tech`'s password is random, generated on the host, and stored only in the
+  runner at `/home/runner/.config/ci/win-password` (for console or RDP logins;
+  tests use the SSH key). The answer-file ISO that contained it is deleted.
+- No sysprep: clones share the machine SID and computer name (`ci-win11`), which
+  is harmless for throwaway test VMs; each clone gets its own MAC and DHCP lease.
+
+Build it (Windows ISO from microsoft.com uploaded to `local` first):
+
+```bash
+scp -r proxmox/windows root@<PROXMOX HOST>:/root/ci-windows
+ssh root@<PROXMOX HOST> /root/ci-windows/build.sh Windows11_Client_x64_en-us_26300_9457.iso
+```
+
+The script presses Enter for the ISO's "Press any key to boot from CD" prompt.
+To watch progress, use the VM's console in the web UI.
+
+**Firewall:** Windows marks a new network Public, and the OpenSSH rule only
+allows Private, so SSH is unreachable from the LAN out of the box. `setup.ps1`
+marks the network Private and allows the rule on any profile. The Windows page's
+SSH step does the same, a bug this template found.
+
+**Running commands over SSH:** the default SSH shell on the template is
+`cmd.exe`, which mangles PowerShell quoting. Send PowerShell as
+`powershell -NoProfile -EncodedCommand <base64 of UTF-16LE text>`, and set
+`$ProgressPreference = 'SilentlyContinue'` to avoid progress-bar XML in the output.
+
+## 7. VM-test workflow
+
+[`.github/workflows/vm-test.yml`](../.github/workflows/vm-test.yml) runs on
+pushes to `main` by the repo owner, or manually from the Actions tab. It has no
+`pull_request` trigger. A cleanup job removes test VMs left by cancelled runs;
+then, up to three at a time, each page/template pair runs
+[`tests/run_vm.sh`](../tests/run_vm.sh):
+
+1. Clone the template, boot, wait for SSH and for cloud-init to finish.
+2. Run the page's blocks in order over SSH as `tech` (real systemd, no stubs).
+3. Reboot, then check that the page's changes stuck: passwordless sudo, time
+   zone and NTP, sshd enabled and running, GitHub keys in `authorized_keys`, SSH
+   client config, git identity from the prompts, and installed packages.
+4. Destroy the VM, always.
+
+A full run of the five Linux templates takes about 15 minutes. The runner
+container has three agents (`wiscotrash-ci`, `-2`, `-3`) so three jobs can run
+at once; each agent lives in its own `actions-runner*` directory with its own
+service.
