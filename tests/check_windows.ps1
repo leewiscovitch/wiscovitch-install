@@ -38,4 +38,11 @@ Check touchpad-scroll 'touchpad scrolling: normal'                     { '{0:X8}
 Check alt-tab         'Alt+Tab shows windows only'                     { (Reg 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' MultiTaskingAltTabFilter) -eq 3 }
 Check fast-startup    'fast startup off'                               { (Reg 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power' HiberbootEnabled) -eq 0 }
 Check power-ac        'plugged in: screen 30 min, never sleep'         { $v = powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE | Out-String; $s = powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE | Out-String; $v -match 'Current AC Power Setting Index: 0x00000708' -and $s -match 'Current AC Power Setting Index: 0x00000000' }
-Check removed-apps    'sample removed apps are gone (Solitaire, Clipchamp, News)' { @(Get-AppxPackage -AllUsers | Where-Object { $_.Name -in 'Microsoft.MicrosoftSolitaireCollection', 'Clipchamp.Clipchamp', 'Microsoft.BingNews' }).Count -eq 0 }
+# The Remove apps list, read from the page's own blocks ('Name'  # comment lines)
+$removeList = @(Get-ChildItem "$PSScriptRoot\blocks\*remove-apps*.powershell" -ErrorAction SilentlyContinue |
+    Get-Content | Select-String -Pattern "^\s*'([^']+)'\s*#" | ForEach-Object { $_.Matches[0].Groups[1].Value })
+$leftUser = @(Get-AppxPackage -AllUsers | Where-Object Name -in $removeList | Select-Object -ExpandProperty Name -Unique)
+$leftProv = @(Get-AppxProvisionedPackage -Online | Where-Object DisplayName -in $removeList | Select-Object -ExpandProperty DisplayName)
+Check removed-apps        "all $($removeList.Count) Remove-apps entries uninstalled$(if ($leftUser) { '; still installed: ' + ($leftUser -join ', ') })" { $removeList.Count -gt 0 -and $leftUser.Count -eq 0 }
+Check removed-provisioned "no Remove-apps entries provisioned for new users$(if ($leftProv) { '; still provisioned: ' + ($leftProv -join ', ') })" { $leftProv.Count -eq 0 }
+Check onedrive-removed    'OneDrive uninstalled'                         { -not (Test-Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\OneDriveSetup.exe') }

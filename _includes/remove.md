@@ -1,17 +1,30 @@
-Uninstall built-in apps with winget. Copy the groups you want; a line for an app that isn't installed just reports "No installed package found" and moves on. Feature updates sometimes bring apps back, so this can be re-run.
+Remove built-in apps with PowerShell's app cmdlets. For each group, the first line removes the apps for every user account, and the second removes their provisioned copies, so Windows doesn't reinstall them for new accounts. Apps that aren't installed are skipped, so any group is safe to re-run (feature updates sometimes bring apps back). Works in Terminal and over SSH.
 
 {% for g in page.remove -%}
+{%- assign appx = g.apps | where_exp: "a", "a.id != 'Microsoft.OneDrive'" -%}
 **{{ g.group }}:**
 
 ```powershell
-{% for a in g.apps %}winget uninstall --id {{ a.id }} --silent --accept-source-agreements  # {{ a.name }}
-{% endfor %}```
-
-{% endfor -%}
-To find other apps, list what's installed:
+$apps = @(
+{% for a in appx %}    '{{ a.id }}'  # {{ a.name }}
+{% endfor %})
+Get-AppxPackage -AllUsers | Where-Object Name -in $apps | Remove-AppxPackage -AllUsers
+Get-AppxProvisionedPackage -Online | Where-Object DisplayName -in $apps | Remove-AppxProvisionedPackage -Online | Out-Null
+```
+{% for a in g.apps %}{% if a.id == 'Microsoft.OneDrive' %}
+OneDrive is a regular desktop program, not a Store app, so it has its own uninstaller:
 
 ```powershell
-winget list
+Stop-Process -Name OneDrive -Force -ErrorAction SilentlyContinue
+$u = (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\OneDriveSetup.exe' -ErrorAction SilentlyContinue).UninstallString
+if ($u -match '^"([^"]+)"\s*(.*)$') { Start-Process -FilePath $Matches[1] -ArgumentList $Matches[2] -Wait }
+```
+{% endif %}{% endfor %}
+{% endfor -%}
+To find other apps, list the ones installed for you:
+
+```powershell
+Get-AppxPackage | Where-Object { -not $_.IsFramework -and $_.SignatureKind -eq 'Store' } | Sort-Object Name | Format-Table Name, Version
 ```
 
-Then uninstall one with `winget uninstall --id NAME --silent --accept-source-agreements`, where `NAME` is the part of the ID column before the version number (e.g. `Microsoft.Paint` from `MSIX\Microsoft.Paint_11.2605.81.0_x64__8wekyb3d8bbwe`).
+Then remove one by putting its name in the `$apps` list of a block above, e.g. `'Microsoft.Paint'`.
