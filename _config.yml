@@ -18,9 +18,9 @@ openssh_msi:
   url: https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.4.0.0p1-Preview/OpenSSH-Win64-v10.4.0.0.msi
   sha256: 788D8643464A01EB63640A2FD746F9ED23D106B5A901A35F88DC8CD40E446AC9
 pwsh_msi:
-  version: 7.6.7
-  url: https://github.com/PowerShell/PowerShell/releases/download/v7.6.7/PowerShell-7.6.7-win-x64.msi
-  sha256: EC575CEF9EC56FCD905DE0D5EEAC9CB7F81A0A65ABB87BB5CD0E87FDFE2B8CC0
+  version: 7.6.8
+  url: https://github.com/PowerShell/PowerShell/releases/download/v7.6.8/PowerShell-7.6.8-win-x64.msi
+  sha256: 079E7CECEDD1E87FA7B4676E5C33DDFBE66859A44A97FBCD1DB797245CBB93D2
 
 # Pinned PowerShell Gallery modules, downloaded as .nupkg (a zip) from
 # https://www.powershellgallery.com/api/v2/package/<name>/<version> and unzipped into

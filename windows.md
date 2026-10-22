@@ -74,8 +74,10 @@ Install the PSWindowsUpdate module (once per machine). It's downloaded straight 
 ```powershell
 {% include ps-module.md name="PSWindowsUpdate" %}
 Import-Module PSWindowsUpdate
-Get-Module PSWindowsUpdate
+Add-WUServiceManager -MicrosoftUpdate -Confirm:$false
 ```
+
+The last line turns on Microsoft Update (the same as **Settings → Windows Update → Advanced options → Receive updates for other Microsoft products**), so `-MicrosoftUpdate` below doesn't have to register it on the fly. If a `Get-WindowsUpdate` command still fails with "Value does not fall within the expected range", wait a minute and run it again: Windows Update can still be starting up right after boot.
 
 Install all Windows updates, including drivers and other Microsoft products, rebooting automatically if needed. Run it again after each reboot until it finds nothing. The first line starts the Windows Update service, which stops itself when idle and can't be started while it's still stopping (common right after first boot):
 
@@ -104,7 +106,7 @@ Update winget itself first. A fresh install ships an older App Installer (which 
 ```powershell
 {% include ps-module.md name="Microsoft.WinGet.Client" %}
 Import-Module Microsoft.WinGet.Client
-Repair-WinGetPackageManager -AllUsers -Latest
+Repair-WinGetPackageManager -Latest
 winget --version
 ```
 

@@ -12,9 +12,10 @@ Get-AppxPackage -AllUsers | Where-Object Name -in $apps | Remove-AppxPackage -Al
 Get-AppxProvisionedPackage -Online | Where-Object DisplayName -in $apps | Remove-AppxProvisionedPackage -Online | Out-Null
 ```
 {% for a in g.apps %}{% if a.id == 'Microsoft.OneDrive' %}
-OneDrive is a regular desktop program, not a Store app, so it has its own uninstaller:
+OneDrive is a regular desktop program, not a Store app, so it has its own uninstaller. Right after the first sign-in, OneDrive may still be installing itself in the background, so the first line waits for that to finish (up to 10 minutes):
 
 ```powershell
+Get-Process OneDriveSetup -ErrorAction Ignore | Wait-Process -Timeout 600 -ErrorAction Ignore
 Stop-Process -Name OneDrive -Force -ErrorAction Ignore
 $u = (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\OneDriveSetup.exe' -ErrorAction Ignore).UninstallString
 if ($u -match '^"([^"]+)"\s*(.*)$') { Start-Process -FilePath $Matches[1] -ArgumentList $Matches[2] -Wait }
