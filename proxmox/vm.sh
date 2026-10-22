@@ -63,8 +63,8 @@ case $cmd in
     id=$1 timeout=${2:-300}
     for _ in $(seq 1 $((timeout / 5))); do
       ip=$(api GET "/nodes/$PVE_NODE/qemu/$id/agent/network-get-interfaces" 2>/dev/null \
-        | jq -r '.result[]? | select(.name != "lo") | ."ip-addresses"[]? | select(."ip-address-type" == "ipv4") | ."ip-address"' \
-        | grep -v '^169\.254\.' | head -1) || true
+        | jq -r '.result[]? | ."ip-addresses"[]? | select(."ip-address-type" == "ipv4") | ."ip-address"' \
+        | grep -vE '^(127|169\.254)\.' | head -1) || true   # skip loopback (Windows doesn't call it "lo") and link-local
       [ -n "${ip:-}" ] && { echo "$ip"; exit 0; }
       sleep 5
     done

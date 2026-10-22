@@ -33,6 +33,10 @@ icacls.exe $keys /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
 if (-not (Get-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -ErrorAction SilentlyContinue)) {
     New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 | Out-Null
 }
+# Windows marks a new network Public, and the OpenSSH rule only allows Private. This is a
+# test VM on the home LAN, so allow SSH on any profile and mark the network Private.
+Set-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -Profile Any
+Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private
 Get-Service sshd | Format-List Name, Status, StartType
 
 "setup done; shutting down"
