@@ -47,7 +47,7 @@ remove:
 
 Run everything in an elevated terminal: **Win+X → Terminal (Admin)**.
 
-Allow scripts and modules to run (needed for the Windows Update module below). `Bypass` turns off script checks for every user on this machine; it applies to the PowerShell you run it in, so repeat it in PowerShell 7 if you use that too:
+Allow scripts and modules to run (needed for the Windows Update module below). `Bypass` turns off script checks for every user on this machine; it applies to Windows PowerShell; PowerShell 7 gets its own setting in the **PowerShell 7** section:
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope LocalMachine -Force
@@ -75,15 +75,17 @@ Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 Install-Module -Name PSWindowsUpdate -Scope AllUsers -Force
 ```
 
-Install all Windows updates, including drivers and other Microsoft products, rebooting automatically if needed. Run it again after each reboot until it finds nothing:
+Install all Windows updates, including drivers and other Microsoft products, rebooting automatically if needed. Run it again after each reboot until it finds nothing. The first line starts the Windows Update service, which stops itself when idle and can't be started while it's still stopping (common right after first boot):
 
 ```powershell
+while ((Get-Service wuauserv).Status -eq 'StopPending') { Start-Sleep 2 }; Start-Service wuauserv
 Get-WindowsUpdate -MicrosoftUpdate -Install -AcceptAll -AutoReboot
 ```
 
 To see what's pending without installing anything:
 
 ```powershell
+while ((Get-Service wuauserv).Status -eq 'StopPending') { Start-Sleep 2 }; Start-Service wuauserv
 Get-WindowsUpdate -MicrosoftUpdate
 ```
 
@@ -132,10 +134,14 @@ winget install --id Microsoft.PowerShell -e --source winget --installer-type wix
 
 `--installer-type wix` picks the classic MSI, which installs to `C:\Program Files\PowerShell\7`. Without it, winget now defaults to the MSIX package, which lands in a versioned WindowsApps folder that the SSH step below can't point to. If an MSIX or Store copy is already installed, both can coexist.
 
-Allow scripts in PowerShell 7 too; it keeps its own execution policy, separate from Windows PowerShell:
+Allow scripts in PowerShell 7 too; it keeps its own execution policy, separate from Windows PowerShell. `Set-ExecutionPolicy` in PowerShell 7 saves it in a file in the install folder, which every PowerShell update replaces, so set it as a machine policy in the registry instead. That survives updates and shows as the `MachinePolicy` row:
 
 ```powershell
-& "$env:ProgramFiles\PowerShell\7\pwsh.exe" -NoProfile -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope LocalMachine -Force; Get-ExecutionPolicy -Scope LocalMachine"
+$p = "HKLM:\SOFTWARE\Policies\Microsoft\PowerShellCore"
+if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
+Set-ItemProperty -Path $p -Name EnableScripts -Type DWord -Value 1
+Set-ItemProperty -Path $p -Name ExecutionPolicy -Type String -Value Bypass
+& "$env:ProgramFiles\PowerShell\7\pwsh.exe" -NoProfile -Command "Get-ExecutionPolicy -List"
 ```
 
 Make PowerShell 7 the default Windows Terminal profile, so new tabs and **Win+X → Terminal (Admin)** open it:

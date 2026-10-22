@@ -20,7 +20,7 @@ Check execution-policy 'LocalMachine execution policy is Bypass'      { (Get-Exe
 Check timezone        'time zone is Eastern Standard Time'             { (Get-TimeZone).Id -eq 'Eastern Standard Time' }
 Check time-service    'Windows Time service set to start automatically' { (Get-Service w32time).StartType -eq 'Automatic' }
 Check pwsh            'PowerShell 7 installed in Program Files'        { (Test-Path $pwshPath) -and ((& $pwshPath -NoProfile -Command '$PSVersionTable.PSVersion.Major') -eq '7') }
-Check pwsh-policy     'PowerShell 7 execution policy is Bypass'         { (& $pwshPath -NoProfile -Command 'Get-ExecutionPolicy -Scope LocalMachine') -eq 'Bypass' }
+Check pwsh-policy     'PowerShell 7 execution policy is Bypass'         { (& $pwshPath -NoProfile -Command 'Get-ExecutionPolicy -Scope MachinePolicy') -eq 'Bypass' }
 Check terminal        'Windows Terminal installed'                     { [bool](Get-AppxPackage -Name Microsoft.WindowsTerminal) }
 Check terminal-default 'Terminal default profile is PowerShell 7'      { (Get-Content $wt -Raw) -match '"defaultProfile"\s*:\s*"\{574e775e-4f2a-5b96-ac1e-a2962a402336\}"' }
 Check git             'Git installed'                                   { [bool](Get-Command git) }

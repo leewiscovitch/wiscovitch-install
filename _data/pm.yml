@@ -3,7 +3,8 @@
 #
 #   lang          code-block language (bash or powershell)
 #   update_label  optional text above the update block (default "Update everything:")
-#   update        list of commands; rendered one per line, chained with `&&\`
+#   update        list of commands; rendered one per line, chained with `&&\` (bash)
+#                 or as separate lines (powershell: Windows PowerShell 5.1 has no `&&`)
 #   install       install command; packages are appended on the same line
 #   one_per_line  emit a separate install command per package (winget)
 #   sshd_pkg      package that provides the SSH server
@@ -36,8 +37,9 @@ pacman:
 
 winget:
   lang: powershell
-  update_label: "Update apps installed through winget, including Store apps winget can see:"
+  update_label: "Update apps installed through winget, including Store apps winget can see. The first line updates winget itself (App Installer): when `upgrade --all` updates winget, it stops partway and cancels the rest:"
   update:
+    - "winget upgrade --id Microsoft.AppInstaller -e --accept-source-agreements --accept-package-agreements"
     - "winget upgrade --all --accept-source-agreements --accept-package-agreements"
   install: "winget install -e --accept-source-agreements --accept-package-agreements --id"
   one_per_line: true
