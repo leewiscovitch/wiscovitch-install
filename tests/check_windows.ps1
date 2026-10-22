@@ -1,5 +1,6 @@
 # After the Windows page has run and the VM has rebooted, check that its changes
 # stuck. Runs on the VM as tech; prints one "name<TAB>status<TAB>note" line per check.
+param([string] $GitName = 'CI Test', [string] $GitEmail = 'ci@example.com')
 $ProgressPreference = 'SilentlyContinue'
 $ErrorActionPreference = 'SilentlyContinue'
 
@@ -24,7 +25,7 @@ Check terminal        'Windows Terminal installed'                     { [bool](
 Check terminal-default 'Terminal default profile is PowerShell 7'      { (Get-Content $wt -Raw) -match '"defaultProfile"\s*:\s*"\{574e775e-4f2a-5b96-ac1e-a2962a402336\}"' }
 Check git             'Git installed'                                   { [bool](Get-Command git) }
 Check gh              'GitHub CLI installed'                            { [bool](Get-Command gh) }
-Check git-identity    'git name/email from the prompts'                { ((git config --global user.name) -eq 'CI Test') -and ((git config --global user.email) -eq 'ci@example.com') }
+Check git-identity    'git name/email from the prompts'                { ((git config --global user.name) -eq $GitName) -and ((git config --global user.email) -eq $GitEmail) }
 Check sshd            'sshd running and automatic'                     { $s = Get-Service sshd; $s.Status -eq 'Running' -and $s.StartType -eq 'Automatic' }
 Check ssh-firewall    'SSH firewall rule allows any profile'           { (Get-NetFirewallRule -Name OpenSSH-Server-In-TCP).Profile -eq 'Any' }
 Check network-private 'network marked Private'                         { @(Get-NetConnectionProfile | Where-Object NetworkCategory -ne 'Private').Count -eq 0 }

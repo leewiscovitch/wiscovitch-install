@@ -3,6 +3,9 @@
 # check that the page's changes survived. Runs on the self-hosted runner.
 #
 # Usage: run_vm_windows.sh TEMPLATE_ID VM_NAME BLOCKDIR
+#        run_vm_windows.sh host:IP NAME BLOCKDIR   (an existing machine: no clone/destroy;
+#                                                  reboots with Restart-Computer)
+# GIT_NAME / GIT_EMAIL answer the git prompts (default: CI Test / ci@example.com).
 #
 # The blocks and tests/run_windows.ps1 are copied to the VM, which runs them in
 # Windows PowerShell 5.1 as `tech` (an administrator, via SSH). After a reboot,
@@ -27,19 +30,33 @@ PS() {
 }
 wait_ssh() { for _ in $(seq 1 90); do echo 'exit 0' | PS >/dev/null 2>&1 && return 0; sleep 5; done; return 1; }
 
-id=$("$vm" clone "$tpl" "$name") || { add setup fail "clone of template $tpl failed"; exit 0; }
-trap '"$vm" destroy "$id" >/dev/null 2>&1 && echo "destroyed VM $id"' EXIT
-echo "VM $id cloned from $tpl"
-"$vm" start "$id" >/dev/null
-ip=$("$vm" ip "$id" 600) && wait_ssh || { add setup fail "VM $id never became reachable"; exit 0; }
+GIT_NAME=${GIT_NAME:-CI Test} GIT_EMAIL=${GIT_EMAIL:-ci@example.com}
+psq() { local q="'" s=$1; printf "'%s'" "${s//$q/$q$q}"; }   # quote for a PowerShell single-quoted string
+if [[ $tpl == host:* ]]; then
+    ip=${tpl#host:} id="host $ip"
+    get_ip() { echo "$ip"; }
+    do_reboot() { echo 'Restart-Computer -Force' | PS >/dev/null 2>&1 || true; }
+    wait_ssh || { add setup fail "$ip not reachable over SSH as tech"; exit 0; }
+else
+    id=$("$vm" clone "$tpl" "$name") || { add setup fail "clone of template $tpl failed"; exit 0; }
+    trap '"$vm" destroy "$id" >/dev/null 2>&1 && echo "destroyed VM $id"' EXIT
+    echo "VM $id cloned from $tpl"
+    "$vm" start "$id" >/dev/null
+    get_ip() { "$vm" ip "$id" 600; }
+    do_reboot() { "$vm" reboot "$id" >/dev/null 2>&1 || true; }
+    ip=$(get_ip) && wait_ssh || { add setup fail "VM $id never became reachable"; exit 0; }
+fi
 setup_note="VM $id at $ip, $(echo '$o = Get-CimInstance Win32_OperatingSystem; "$($o.Caption) build $($o.BuildNumber)"' | PS 2>/dev/null | tr -d '\r')"
 
 # Copy blocks and the runner script to the VM, run them there, copy results back
 echo 'New-Item -ItemType Directory -Force C:\ci | Out-Null' | PS >/dev/null
 scp -q "${SSH_OPTS[@]}" -r "$dir" "tech@$ip:C:/ci/blocks"
 scp -q "${SSH_OPTS[@]}" "$here/run_windows.ps1" "$here/check_windows.ps1" "tech@$ip:C:/ci/"
+# winget's catalog is a per-user package that Windows normally sets up in a desktop
+# session; over SSH winget fails with 0x8A15000F until it's added by hand. Test-only.
+echo '$ProgressPreference = "SilentlyContinue"; Add-AppxPackage -Path https://cdn.winget.microsoft.com/cache/source.msix' | PS >/dev/null 2>&1
 echo "running the Windows page on VM $id"
-echo '& C:\ci\run_windows.ps1 -Dir C:\ci\blocks -Target vm' | PS > "$dir/run_windows.log" 2>&1
+echo "& C:\ci\run_windows.ps1 -Dir C:\ci\blocks -Target vm -GitName $(psq "$GIT_NAME") -GitEmail $(psq "$GIT_EMAIL")" | PS > "$dir/run_windows.log" 2>&1
 if scp -q "${SSH_OPTS[@]}" "tech@$ip:C:/ci/blocks/*.log" "tech@$ip:C:/ci/blocks/results.tsv" "$dir/"; then
     # Windows wrote UTF-8 with a BOM and CRLF line endings
     sed -i 's/\r$//; s/^\xEF\xBB\xBF//' "$dir/results.tsv"
@@ -49,14 +66,14 @@ else
 fi
 
 # Reboot, then check that the page's changes stuck
-echo "rebooting VM $id"
-"$vm" reboot "$id" >/dev/null 2>&1 || true
+echo "rebooting $id"
+do_reboot
 sleep 60
-ip=$("$vm" ip "$id" 600) && wait_ssh || { add reboot fail "did not come back after reboot"; exit 0; }
+ip=$(get_ip) && wait_ssh || { add reboot fail "did not come back after reboot"; exit 0; }
 add reboot pass "back up after reboot"
 
 # With DefaultShell set by the page, a plain SSH command should land in PowerShell 7
 shell=$(ssh -n "${SSH_OPTS[@]}" "tech@$ip" '$PSVersionTable.PSVersion.Major' 2>/dev/null | tr -d '\r')
 if [ "$shell" = 7 ]; then add check-ssh-session pass "SSH session lands in PowerShell 7"; else add check-ssh-session fail "SSH session shell reported '$shell'"; fi
-echo '& C:\ci\check_windows.ps1' | PS 2>/dev/null | tr -d '\r' | grep -P '^check-[^\t]+\t(pass|fail)\t' >> "$results"
+echo "& C:\ci\check_windows.ps1 -GitName $(psq "$GIT_NAME") -GitEmail $(psq "$GIT_EMAIL")" | PS 2>/dev/null | tr -d '\r' | grep -P '^check-[^\t]+\t(pass|fail)\t' >> "$results"
 exit 0

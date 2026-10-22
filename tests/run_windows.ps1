@@ -9,7 +9,8 @@
 # a non-zero native exit code, except winget codes that only mean "already
 # installed" / "nothing to upgrade" / "not installed".
 # Results go to BLOCKDIR\results.tsv (name, status, note) and BLOCKDIR\NNN.log.
-param([Parameter(Mandatory)] [string] $Dir, [ValidateSet('ci', 'vm')] [string] $Target = 'ci')
+param([Parameter(Mandatory)] [string] $Dir, [ValidateSet('ci', 'vm')] [string] $Target = 'ci',
+      [string] $GitName = 'CI Test', [string] $GitEmail = 'ci@example.com')
 
 $results = Join-Path $Dir 'results.tsv'
 Set-Content -Path $results -Value $null -Encoding utf8
@@ -26,6 +27,11 @@ if ($Target -eq 'ci') {
 $tmp = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }
 
 $wingetOk = '-1978335189, -1978335135, -1978335212'  # no upgrade, already installed, not installed
+if ($Target -eq 'vm') {
+    # Over SSH there's no desktop session, so MSIX packages (e.g. Windows Terminal) can't
+    # be installed: 0x80073D19 "a user was logged off". Pasting into Terminal is fine.
+    $wingetOk += ', -2147009255'
+}
 
 function Add-Result($name, $status, $note) {
     Add-Content -Path $results -Value "$name`t$status`t$note" -Encoding utf8
@@ -43,7 +49,8 @@ foreach ($f in Get-ChildItem -Path $Dir -Filter *.powershell | Sort-Object Name)
     [void]$sb.AppendLine('$nativeFailures = @(); $okCodes = @(' + $wingetOk + ')')
     [void]$sb.AppendLine('$ProgressPreference = "SilentlyContinue"')   # progress bars turn into XML noise in logs
     if ($code -match 'Read-Host') {
-        [void]$sb.AppendLine('function Read-Host { param($Prompt) @{ "Git name" = "CI Test"; "Git email" = "ci@example.com" }[$Prompt] }')
+        $answers = '@{ "Git name" = ''' + $GitName.Replace("'", "''") + '''; "Git email" = ''' + $GitEmail.Replace("'", "''") + ''' }'
+        [void]$sb.AppendLine('function Read-Host { param($Prompt) ' + $answers + '[$Prompt] }')
     }
     foreach ($st in $ast.EndBlock.Statements) {
         [void]$sb.AppendLine('$global:LASTEXITCODE = 0')

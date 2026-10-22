@@ -98,10 +98,10 @@ Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseMode
 Install the latest stable PowerShell 7. Run the same command later to update it (winget upgrades it if it's already installed; `winget upgrade --all` also keeps it current). Run it from Windows PowerShell rather than from PowerShell 7 itself, so the installer isn't replacing the shell it's running in:
 
 ```powershell
-winget install --id Microsoft.PowerShell -e --source winget --accept-source-agreements --accept-package-agreements
+winget install --id Microsoft.PowerShell -e --source winget --installer-type wix --accept-source-agreements --accept-package-agreements
 ```
 
-This installs to `C:\Program Files\PowerShell\7`. If PowerShell 7 was installed from the Microsoft Store instead, both can coexist, but the SSH step below needs this one.
+`--installer-type wix` picks the classic MSI, which installs to `C:\Program Files\PowerShell\7`. Without it, winget now defaults to the MSIX package, which lands in a versioned WindowsApps folder that the SSH step below can't point to. If an MSIX or Store copy is already installed, both can coexist.
 
 Allow scripts in PowerShell 7 too; it keeps its own execution policy, separate from Windows PowerShell:
 
@@ -129,10 +129,17 @@ If Terminal has never been opened, this creates a settings file with just the de
 Make PowerShell 7 the shell for incoming SSH sessions (the default is `cmd.exe`):
 
 ```powershell
-if (-not (Test-Path "HKLM:\SOFTWARE\OpenSSH")) { New-Item -Path "HKLM:\SOFTWARE\OpenSSH" | Out-Null }
-New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "$env:ProgramFiles\PowerShell\7\pwsh.exe" -PropertyType String -Force | Out-Null
-Get-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell
+$pwsh = "$env:ProgramFiles\PowerShell\7\pwsh.exe"
+if (Test-Path $pwsh) {
+    if (-not (Test-Path "HKLM:\SOFTWARE\OpenSSH")) { New-Item -Path "HKLM:\SOFTWARE\OpenSSH" | Out-Null }
+    New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value $pwsh -PropertyType String -Force | Out-Null
+    Get-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell
+} else {
+    Write-Warning "$pwsh not found, so the SSH shell was left unchanged. Install PowerShell 7 with the MSI step above first."
+}
 ```
+
+The check matters: if `DefaultShell` points at a file that doesn't exist, sshd refuses every login. To undo the setting: `Remove-ItemProperty -Path HKLM:\SOFTWARE\OpenSSH -Name DefaultShell`.
 
 Check the version from a new Terminal tab:
 
