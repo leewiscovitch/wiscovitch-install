@@ -283,8 +283,8 @@ about 40 minutes by [`windows/build.sh`](windows/build.sh):
   (Store auto-updates are turned off by policy to keep it that way), installs
   OpenSSH Server from the **Win32-OpenSSH MSI** with only the runner's key in
   `administrators_authorized_keys`, opens SSH in the firewall (see below), and
-  shuts down. Download URLs and SHA-256s are pinned in the script; keep the
-  OpenSSH one in sync with `openssh_msi` in `_config.yml`.
+  shuts down. `build.sh` fills in the OpenSSH MSI's version, release and SHA-256
+  from `openssh_msi` in the repo's `_config.yml` (or a copy placed next to it).
 - `tech`'s password is random, generated on the host, and stored only in the
   runner at `/home/runner/.config/ci/win-password` (for console or RDP logins;
   tests use the SSH key). The answer-file ISO that contained it is deleted.

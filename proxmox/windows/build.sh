@@ -19,6 +19,14 @@ ANSWER_ISO=ci-win11-answer.iso
 RUNNER_CT=9050
 log() { echo "[$(date +%H:%M:%S)] $*"; }
 
+# Pinned OpenSSH MSI from the site's _config.yml (the repo's, or a copy next to this script)
+cfg=../../_config.yml; [ -f "$cfg" ] || cfg=_config.yml
+[ -f "$cfg" ] || { log "_config.yml not found (copy it next to build.sh)"; exit 1; }
+ossh() { sed -n '/^openssh_msi:/,/^[^ ]/p' "$cfg" | sed -n "s/^  $1: *\([^ #]*\).*/\1/p"; }
+OPENSSH_VERSION=$(ossh version) OPENSSH_RELEASE=$(ossh release) OPENSSH_SHA256=$(ossh sha256)
+[ -n "$OPENSSH_VERSION" ] && [ -n "$OPENSSH_RELEASE" ] && [ -n "$OPENSSH_SHA256" ] || { log "openssh_msi incomplete in $cfg"; exit 1; }
+log "OpenSSH MSI $OPENSSH_VERSION ($OPENSSH_RELEASE) from $cfg"
+
 [ -f "$ISO_DIR/$WIN_ISO" ] || { log "not found: $ISO_DIR/$WIN_ISO"; exit 1; }
 [ -f "$ISO_DIR/virtio-win.iso" ] || { log "not found: $ISO_DIR/virtio-win.iso"; exit 1; }
 if qm status $ID >/dev/null 2>&1; then log "VMID $ID exists; destroy it first to rebuild"; exit 1; fi
@@ -29,7 +37,9 @@ umask 077
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 sed "s|__PASSWORD__|$pw|g" autounattend.xml > "$work/autounattend.xml"
-sed "s|__PASSWORD__|$pw|g" setup.ps1 > "$work/setup.ps1"   # auto-login
+sed -e "s|__PASSWORD__|$pw|g" -e "s|__OPENSSH_VERSION__|$OPENSSH_VERSION|g" \
+    -e "s|__OPENSSH_RELEASE__|$OPENSSH_RELEASE|g" -e "s|__OPENSSH_SHA256__|$OPENSSH_SHA256|g" \
+    setup.ps1 > "$work/setup.ps1"   # auto-login, OpenSSH MSI
 pct exec $RUNNER_CT -- cat /home/runner/.ssh/id_ed25519.pub > "$work/runner.pub"
 genisoimage -quiet -J -r -V CI_ANSWER -o "$ISO_DIR/$ANSWER_ISO" "$work"
 printf '%s\n' "$pw" > "$work/win-password"

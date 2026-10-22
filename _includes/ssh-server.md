@@ -7,13 +7,14 @@ if (Get-Service sshd -ErrorAction Ignore) {
     "An SSH server is already installed; keeping it."
 } else {
     $msi = "$env:TEMP\OpenSSH-Win64.msi"
-    Invoke-WebRequest '{{ site.openssh_msi.url }}' -OutFile $msi -UseBasicParsing
+    Invoke-WebRequest 'https://github.com/PowerShell/Win32-OpenSSH/releases/download/{{ site.openssh_msi.release }}/OpenSSH-Win64-v{{ site.openssh_msi.version }}.msi' -OutFile $msi -UseBasicParsing
     if ((Get-FileHash $msi -Algorithm SHA256).Hash -ne '{{ site.openssh_msi.sha256 }}') { throw 'OpenSSH MSI checksum mismatch; not installing.' }
     Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait
 }
 Set-Service -Name sshd -StartupType Automatic
 Start-Service sshd
-Get-Service sshd
+Get-Service sshd                 # Status: Running
+(Get-Item ((Get-CimInstance Win32_Service -Filter "Name='sshd'").PathName.Trim('"'))).VersionInfo.ProductVersion   # {{ site.openssh_msi.version }} from the MSI (a built-in server shows its own version)
 ```
 
 Let SSH through the firewall. Windows marks a new network as Public, and the OpenSSH rule only allows Private networks, so out of the box the server can't be reached from the LAN. This marks the current network Private and allows the SSH rule on every network type (the rule's display name is "OpenSSH SSH Server (sshd)" for the built-in server, "OpenSSH SSH Server Preview (sshd)" for the MSI):

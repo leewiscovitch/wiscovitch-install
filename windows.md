@@ -1,6 +1,7 @@
 ---
 title: Windows 11
 permalink: /windows/
+os_version: Windows 11 Pro, build 26300 or newer   # shown as the expected result of the Verify step
 pm: winget
 packages:
   - Git.Git
@@ -75,6 +76,7 @@ Install the PSWindowsUpdate module (once per machine). It's downloaded straight 
 {% include ps-module.md name="PSWindowsUpdate" %}
 Import-Module PSWindowsUpdate
 Add-WUServiceManager -MicrosoftUpdate -Confirm:$false
+(Get-Module PSWindowsUpdate).Version.ToString()   # {{ site.ps_modules.PSWindowsUpdate.version }}
 ```
 
 The last line turns on Microsoft Update (the same as **Settings → Windows Update → Advanced options → Receive updates for other Microsoft products**), so `-MicrosoftUpdate` below doesn't have to register it on the fly. If a `Get-WindowsUpdate` command still fails with "Value does not fall within the expected range", wait a minute and run it again: Windows Update can still be starting up right after boot.
@@ -107,7 +109,7 @@ Update winget itself first. A fresh install ships an older App Installer (which 
 {% include ps-module.md name="Microsoft.WinGet.Client" %}
 Import-Module Microsoft.WinGet.Client
 Repair-WinGetPackageManager -Latest
-winget --version
+winget --version   # v{{ site.winget_version }} or newer
 ```
 
 {% include update.md %}
@@ -122,7 +124,7 @@ winget --version
 $pwsh = "$env:ProgramFiles\PowerShell\7\pwsh.exe"
 if (-not (Test-Path $pwsh)) {
     $msi = "$env:TEMP\PowerShell-7-win-x64.msi"
-    Invoke-WebRequest '{{ site.pwsh_msi.url }}' -OutFile $msi -UseBasicParsing
+    Invoke-WebRequest 'https://github.com/PowerShell/PowerShell/releases/download/v{{ site.pwsh_msi.version }}/PowerShell-{{ site.pwsh_msi.version }}-win-x64.msi' -OutFile $msi -UseBasicParsing
     if ((Get-FileHash $msi -Algorithm SHA256).Hash -ne '{{ site.pwsh_msi.sha256 }}') { throw 'PowerShell MSI checksum mismatch; not installing.' }
     Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait
 }
@@ -197,7 +199,7 @@ The check matters: if `DefaultShell` points at a file that doesn't exist, sshd r
 Check the version from a new Terminal tab:
 
 ```powershell
-$PSVersionTable.PSVersion
+$PSVersionTable.PSVersion   # {{ site.pwsh_msi.version }} or newer
 ```
 
 ## Settings

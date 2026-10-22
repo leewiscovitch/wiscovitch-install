@@ -11,16 +11,23 @@ timezone_windows: Eastern Standard Time
 # GitHub account whose public SSH keys (github.com/<user>.keys) are trusted for logins
 github_user: leewiscovitch
 
-# Pinned Windows MSIs (GitHub releases). To update: new URL plus the SHA-256 shown
-# for the file on its release page ("sha256:..." next to the asset).
-openssh_msi:
+# Pinned versions. Every download URL and every "should show" note on the pages is
+# built from these, so a version is changed in one place. To update one, change its
+# version (and release tag, if it has one) plus the SHA-256 of the new download; GitHub
+# shows it as "sha256:..." next to each release asset.
+
+# Windows MSIs from GitHub releases
+openssh_msi:     # PowerShell/Win32-OpenSSH; URL: releases/download/<release>/OpenSSH-Win64-v<version>.msi
   version: 10.4.0.0
-  url: https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.4.0.0p1-Preview/OpenSSH-Win64-v10.4.0.0.msi
+  release: 10.4.0.0p1-Preview
   sha256: 788D8643464A01EB63640A2FD746F9ED23D106B5A901A35F88DC8CD40E446AC9
-pwsh_msi:
+pwsh_msi:        # PowerShell/PowerShell; URL: releases/download/v<version>/PowerShell-<version>-win-x64.msi
   version: 7.6.8
-  url: https://github.com/PowerShell/PowerShell/releases/download/v7.6.8/PowerShell-7.6.8-win-x64.msi
   sha256: 079E7CECEDD1E87FA7B4676E5C33DDFBE66859A44A97FBCD1DB797245CBB93D2
+
+# winget version last seen by the tests. Not a pin (Repair-WinGetPackageManager -Latest
+# always gets the newest); only used for the "should show ... or newer" note.
+winget_version: 1.29.380
 
 # Pinned PowerShell Gallery modules, downloaded as .nupkg (a zip) from
 # https://www.powershellgallery.com/api/v2/package/<name>/<version> and unzipped into

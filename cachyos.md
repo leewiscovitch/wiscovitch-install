@@ -1,6 +1,7 @@
 ---
 title: CachyOS
 permalink: /cachyos/
+os_version: CachyOS (rolling release)   # shown as the expected result of the Verify step
 pm: pacman
 packages:
   - git

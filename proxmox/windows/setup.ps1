@@ -46,8 +46,8 @@ Set-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore' AutoDownload -
 "App Installer: $((Get-AppxPackage -Name Microsoft.DesktopAppInstaller | Sort-Object Version | Select-Object -Last 1).Version)"
 
 # OpenSSH Server from Microsoft's Win32-OpenSSH MSI (seconds, vs minutes from Windows
-# Update). Keep in sync with openssh_msi in _config.yml.
-$msi = Get-Verified 'https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.4.0.0p1-Preview/OpenSSH-Win64-v10.4.0.0.msi' '788D8643464A01EB63640A2FD746F9ED23D106B5A901A35F88DC8CD40E446AC9' "$env:TEMP\OpenSSH-Win64.msi"
+# Update). build.sh fills in the version, release and checksum from openssh_msi in _config.yml.
+$msi = Get-Verified 'https://github.com/PowerShell/Win32-OpenSSH/releases/download/__OPENSSH_RELEASE__/OpenSSH-Win64-v__OPENSSH_VERSION__.msi' '__OPENSSH_SHA256__' "$env:TEMP\OpenSSH-Win64.msi"
 Start-Process msiexec.exe -Wait -ArgumentList "/i `"$msi`" /qn /norestart"
 Set-Service -Name sshd -StartupType Automatic
 Start-Service sshd

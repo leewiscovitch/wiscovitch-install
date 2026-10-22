@@ -1,6 +1,7 @@
 ---
 title: Ubuntu Desktop
 permalink: /ubuntu/desktop/
+os_version: Ubuntu 26.04 LTS   # shown as the expected result of the Verify step
 parent: /ubuntu/
 parent_title: Ubuntu
 pm: apt

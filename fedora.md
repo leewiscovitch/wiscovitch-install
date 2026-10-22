@@ -1,6 +1,7 @@
 ---
 title: Fedora
 permalink: /fedora/
+os_version: Fedora Linux 44   # shown as the expected result of the Verify step
 pm: dnf
 packages:
   - git

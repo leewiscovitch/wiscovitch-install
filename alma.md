@@ -1,6 +1,7 @@
 ---
 title: AlmaLinux / Rocky Linux
 permalink: /alma/
+os_version: AlmaLinux or Rocky Linux 9.x or 10.x   # shown as the expected result of the Verify step
 redirect_from:
   - /rocky/
 pm: dnf
