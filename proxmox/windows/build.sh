@@ -46,8 +46,11 @@ qm create $ID --name $NAME --pool ci --ostype win11 --machine q35 --bios ovmf --
   --description "Windows 11 template for install.wiscovitch.org VM tests (proxmox/windows/build.sh)"
 log "VM $ID created; starting install"
 qm start $ID
-# The Windows ISO's UEFI loader waits for a key press ("Press any key to boot from CD")
-for _ in $(seq 1 25); do qm sendkey $ID ret >/dev/null 2>&1 || true; sleep 1; done
+# The Windows ISO's UEFI loader waits for a key press ("Press any key to boot from CD"),
+# shown for a few seconds after power-on. Only press during that window: later presses
+# reach Windows Setup, where Enter hits the focused Cancel button and Setup stops at
+# "Are you sure you want to quit?" (it happened once; answering No resumes it).
+for _ in $(seq 1 10); do qm sendkey $ID ret >/dev/null 2>&1 || true; sleep 1; done
 
 log "waiting for setup to finish and power off (up to 90 min)"
 for _ in $(seq 1 540); do
