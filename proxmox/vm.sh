@@ -3,7 +3,7 @@
 # with the ci@pve token, so it can only touch the `ci` pool.
 #
 # Usage:
-#   vm.sh clone TEMPLATE_ID NAME   -> prints the new VMID (linked clone in 9100-9199)
+#   vm.sh clone TEMPLATE_ID NAME   -> prints the new VMID (linked clone in 9100-9119, fixed MAC per VMID)
 #   vm.sh start VMID
 #   vm.sh ip VMID [TIMEOUT_S]      -> waits for the guest agent, prints the first LAN IPv4
 #   vm.sh reboot VMID
@@ -46,15 +46,23 @@ cmd=${1:-}; shift || true
 case $cmd in
   clone)
     tpl=$1 name=$2
+    # Test VMs use VMIDs 9100-9119, each with a fixed MAC derived from its VMID, so
+    # the LAN's DHCP server sees the same 20 machines again and reuses their leases.
+    # (Random MACs on every clone exhausted the DHCP pool after a day of runs.)
     # Parallel jobs can pick the same free VMID; the loser's clone task fails,
     # so try the next one. A random start makes collisions rare.
-    start=$((RANDOM % 100))
-    for n in $(seq 0 99); do
-      id=$((9100 + (start + n) % 100))
+    slots=20
+    start=$((RANDOM % slots))
+    for n in $(seq 0 $((slots - 1))); do
+      id=$((9100 + (start + n) % slots))
       upid=$(api POST "/nodes/$PVE_NODE/qemu/$tpl/clone" -d newid=$id -d "name=$name" -d pool=ci -d full=0 2>/dev/null) || continue
-      if wait_task "$upid" 2>/dev/null; then echo "$id"; exit 0; fi
+      if wait_task "$upid" 2>/dev/null; then
+        mac=$(printf 'BC:24:11:C1:91:%02X' $((id - 9100)))
+        api PUT "/nodes/$PVE_NODE/qemu/$id/config" --data-urlencode "net0=virtio=$mac,bridge=vmbr0" >/dev/null
+        echo "$id"; exit 0
+      fi
     done
-    echo "no free VMID in 9100-9199" >&2; exit 1 ;;
+    echo "no free VMID in 9100-$((9100 + slots - 1))" >&2; exit 1 ;;
   start)
     wait_task "$(api POST "/nodes/$PVE_NODE/qemu/$1/status/start")" ;;
   reboot)
