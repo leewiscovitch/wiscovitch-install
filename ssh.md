@@ -13,6 +13,15 @@ A key has two halves:
 
 The machines you log in to trust the public keys listed at [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys). To let a new machine log in everywhere, add its public key to GitHub; to let a machine accept your keys, run the **Configure** step on its OS page. Commands use `<HOST>` for the machine you're connecting to.
 
+### How github.com/&lt;user&gt;.keys works
+
+Every GitHub account has this address. It returns the account's public SSH keys as plain text, one per line, with no login needed:
+
+- **What's listed:** the keys under [GitHub → Settings → SSH and GPG keys](https://github.com/settings/keys) added as *authentication* keys (the ones `git push` over SSH uses). Keys added only for commit signing aren't listed. `github.com/<user>.gpg` does the same for GPG keys.
+- **Why it's safe to publish:** a public key only lets a server check that you hold the matching private key; it can't log in by itself. The private key never leaves your machine.
+- **It's copied once, not live.** The **Configure** step downloads the list at that moment. A key added to GitHub later doesn't reach machines that are already set up, and a key deleted from GitHub keeps working on them until you refresh their list ([Accept keys](#accept-keys) below). If a machine with a private key is lost, delete its key from GitHub *and* refresh every machine.
+- **Your GitHub account is the trust point.** Anyone who could add a key to it before you set up a machine would get SSH access to that machine, so keep two-factor authentication on for GitHub.
+
 ## Create a key
 
 On the machine you'll connect **from**. Press Enter to accept the default file; a passphrase is optional.
@@ -59,7 +68,7 @@ The key also works for `git` over SSH to GitHub.
 
 Each OS page's **Configure** section installs the SSH server and trusts your GitHub keys: [Windows]({{ '/windows/#configure' | relative_url }}) · [Ubuntu Desktop]({{ '/ubuntu/desktop/#configure' | relative_url }}) · [Ubuntu Server]({{ '/ubuntu/server/#configure' | relative_url }}) · [Fedora]({{ '/fedora/#configure' | relative_url }}) · [Alma/Rocky]({{ '/alma/#configure' | relative_url }}) · [CachyOS]({{ '/cachyos/#configure' | relative_url }}).
 
-After publishing a new key, add it to machines that are already set up by fetching the list again. On Linux, this replaces the file with the current list:
+After publishing a new key, or deleting one from GitHub, refresh machines that are already set up by fetching the list again. Both commands **replace** the file with the current list, so deleted keys are removed too (and any key you added by hand, outside GitHub). On Linux:
 
 ```bash
 curl -fsSL https://github.com/{{ site.github_user }}.keys > ~/.ssh/authorized_keys
