@@ -247,6 +247,24 @@ pct exec 9050 -- sudo -u runner /home/runner/smoke-test.sh 9000 9001 9002 9003 9
 A clone takes about 2 s, boots to SSH in about 25 s, and a full check with a
 reboot takes under a minute.
 
+### DHCP and test VM addresses
+
+Test VMs get their IPv4 address from the LAN's DHCP server (the Pi-hole, pool
+`.100`-`.199`). Clones use VMIDs 9100-9119 only, and `vm.sh` gives each one a MAC
+derived from its VMID (`BC:24:11:C1:91:00` to `BC:24:11:C1:91:13`), so DHCP keeps
+seeing the same 20 machines and reuses their leases. With random MACs, every clone
+took a new lease; after a day of runs the pool was full and new VMs got only IPv6.
+
+If that ever happens again, clear the stale Proxmox leases on the Pi-hole, keeping
+the long-lived guests (find their MACs with `qm config <VMID> | grep net0`):
+
+```bash
+sudo service pihole-FTL stop
+sudo cp /etc/pihole/dhcp.leases /etc/pihole/dhcp.leases.bak
+sudo awk 'tolower($2) !~ /^bc:24:11:/ || tolower($2) ~ /^(<KEEP MAC 1>|<KEEP MAC 2>)$/' /etc/pihole/dhcp.leases.bak | sudo tee /etc/pihole/dhcp.leases > /dev/null
+sudo service pihole-FTL start
+```
+
 ## 6. Windows 11 template
 
 VMID 9010 `tpl-win11`: Windows 11 Pro, UEFI with Secure Boot (Microsoft keys),
