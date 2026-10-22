@@ -37,22 +37,13 @@ Set-ItemProperty $winlogon DefaultDomainName '.'
 Set-ItemProperty $winlogon DefaultPassword '__PASSWORD__'
 Remove-ItemProperty $winlogon AutoLogonCount -ErrorAction Ignore   # the unattend's one-time count would turn it off
 
-# Current App Installer (winget) with its dependencies, then re-register it from its
-# manifest: the Store's background update can leave winget's command shortcut pointing
-# at a missing path ("file cannot be accessed" / "path not found"). Keep in sync with
-# https://github.com/microsoft/winget-cli/releases.
-$wg = 'https://github.com/microsoft/winget-cli/releases/download/v1.29.380'
-$dir = "$env:TEMP\appinstaller"; New-Item -ItemType Directory -Force $dir | Out-Null
-$bundle = Get-Verified "$wg/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" '65DEA9C01CE08EE7B763366B27C0E651F97DB857C11CA9B9C301826C10092F2E' "$dir\appinstaller.msixbundle"
-$depsZip = Get-Verified "$wg/DesktopAppInstaller_Dependencies.zip" 'BA875AFE9D190F61218985AC0292A99D1DB710BF93E13C68944CA9D89F0D82D1' "$dir\deps.zip"
-Expand-Archive $depsZip -DestinationPath "$dir\deps" -Force
-$deps = (Get-ChildItem "$dir\deps" -Recurse -Filter *.appx | Where-Object FullName -match 'x64').FullName
-Add-AppxPackage -Path $bundle -DependencyPath $deps -ForceApplicationShutdown
-$ai = Get-AppxPackage -Name Microsoft.DesktopAppInstaller | Sort-Object Version | Select-Object -Last 1
-Add-AppxPackage -Register (Join-Path $ai.InstallLocation 'AppxManifest.xml') -DisableDevelopmentMode -ForceApplicationShutdown
-"App Installer: $($ai.Version)"
-& "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" source update --disable-interactivity
-"winget: $(& "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe" --version)"
+# Keep the App Installer (winget) that ships with the ISO, like a fresh install: the
+# page's Update section updates it (Repair-WinGetPackageManager), and a newer one here
+# would hide that path from the VM test. Turn off Store auto-updates so it stays old
+# until the page runs (the Store's background update also broke winget's shortcut once).
+New-Item -Path 'HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore' -Force | Out-Null
+Set-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore' AutoDownload -Type DWord -Value 2
+"App Installer: $((Get-AppxPackage -Name Microsoft.DesktopAppInstaller | Sort-Object Version | Select-Object -Last 1).Version)"
 
 # OpenSSH Server from Microsoft's Win32-OpenSSH MSI (seconds, vs minutes from Windows
 # Update). Keep in sync with openssh_msi in _config.yml.

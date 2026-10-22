@@ -90,10 +90,21 @@ while ((Get-Service wuauserv).Status -eq 'StopPending') { Start-Sleep 2 }; Start
 Get-WindowsUpdate -MicrosoftUpdate
 ```
 
+**Update for Windows Security platform (KB5007651)** can show up again on every run, even though each run reports it as installed. Once it's the only thing left, Windows is up to date; it stops appearing after the Security app updates itself through the Store.
+
 Tell the Microsoft Store to check for and install updates for all Store apps. It runs in the background; progress shows in **Store → Downloads**:
 
 ```powershell
 Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseModernAppManagement_AppManagement01" | Invoke-CimMethod -MethodName UpdateScanMethod
+```
+
+Update winget itself first. A fresh install ships an older App Installer (which provides `winget`), and winget can't replace itself mid-run: `winget upgrade` stops with "Restart the application" or "file in use". Microsoft's WinGet PowerShell module updates it and its dependencies from outside winget:
+
+```powershell
+{% include ps-module.md name="Microsoft.WinGet.Client" %}
+Import-Module Microsoft.WinGet.Client
+Repair-WinGetPackageManager -AllUsers -Latest
+winget --version
 ```
 
 {% include update.md %}
@@ -148,18 +159,22 @@ Make PowerShell 7 the default Windows Terminal profile, so new tabs and **Win+X 
 
 ```powershell
 $wt = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-$pwshProfile = "{574e775e-4f2a-5b96-ac1e-a2962a402336}"
-if (Test-Path $wt) {
-    $json = [IO.File]::ReadAllText($wt) -replace '"defaultProfile"\s*:\s*"[^"]*"', "`"defaultProfile`": `"$pwshProfile`""
+$line = "`"defaultProfile`": `"{574e775e-4f2a-5b96-ac1e-a2962a402336}`""
+$json = if (Test-Path $wt) { [IO.File]::ReadAllText($wt) } else { "" }
+if ($json -match '"defaultProfile"\s*:') {
+    $json = $json -replace '"defaultProfile"\s*:\s*"[^"]*"', $line
+} elseif ($json -match '^[^{]*\{\s*("|//)') {
+    $json = $json -replace '^([^{]*\{)', "`$1`n    $line,"
 } else {
+    if ($json) { Copy-Item $wt "$wt.bak" -Force }
     New-Item -ItemType Directory -Force -Path (Split-Path $wt) | Out-Null
-    $json = "{ `"defaultProfile`": `"$pwshProfile`" }"
+    $json = "{ $line }"
 }
 [IO.File]::WriteAllText($wt, $json, [Text.UTF8Encoding]::new($false))
 Select-String -Path $wt -Pattern '"defaultProfile"'
 ```
 
-If Terminal has never been opened, this creates a settings file with just the default profile, and Terminal fills in the rest on first launch. Close and reopen Terminal; the PowerShell 7 profile appears once Terminal detects the new install.
+It replaces an existing `defaultProfile`, or adds one if the file has none. If Terminal has never been opened, or the file is empty or damaged (for example after a crash), it saves any old file as `settings.json.bak` and writes one with just the default profile; Terminal fills in the rest on first launch. Close and reopen Terminal; the PowerShell 7 profile appears once Terminal detects the new install.
 
 Make PowerShell 7 the shell for incoming SSH sessions (the default is `cmd.exe`):
 

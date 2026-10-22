@@ -278,8 +278,9 @@ about 40 minutes by [`windows/build.sh`](windows/build.sh):
   Bridge Xeon isn't on Microsoft's list).
 - [`windows/setup.ps1`](windows/setup.ps1) runs at first logon, in `tech`'s
   desktop session: installs all VirtIO drivers and the QEMU guest agent, turns off
-  sleep, turns on **auto-login** for `tech`, installs a current **App Installer**
-  (winget) from Microsoft's release and re-registers it from its manifest, installs
+  sleep, turns on **auto-login** for `tech`, keeps the ISO's older **App Installer**
+  (winget) like a fresh install, so each test exercises the page's winget update
+  (Store auto-updates are turned off by policy to keep it that way), installs
   OpenSSH Server from the **Win32-OpenSSH MSI** with only the runner's key in
   `administrators_authorized_keys`, opens SSH in the firewall (see below), and
   shuts down. Download URLs and SHA-256s are pinned in the script; keep the

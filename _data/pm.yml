@@ -37,9 +37,8 @@ pacman:
 
 winget:
   lang: powershell
-  update_label: "Update apps installed through winget, including Store apps winget can see. The first line updates winget itself (App Installer): when `upgrade --all` updates winget, it stops partway and cancels the rest:"
+  update_label: "Update apps installed through winget, including Store apps winget can see:"
   update:
-    - "winget upgrade --id Microsoft.AppInstaller -e --accept-source-agreements --accept-package-agreements"
     - "winget upgrade --all --accept-source-agreements --accept-package-agreements"
   install: "winget install -e --accept-source-agreements --accept-package-agreements --id"
   one_per_line: true

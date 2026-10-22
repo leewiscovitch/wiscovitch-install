@@ -30,6 +30,7 @@ if ($Target -eq 'ci') {
     # Over SSH the winget command can't start (no desktop session); the page's
     # "Over SSH" install block covers the same packages and is run instead.
     $skip['(?m)^winget '] = 'winget command needs a desktop session (Over SSH block runs instead)'
+    $skip['Repair-WinGetPackageManager'] = 'MSIX installs need a desktop session'
 }
 $tmp = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }
 

@@ -32,6 +32,10 @@ log() { echo "[$(date +%H:%M:%S)] $*"; }
 
 # First-boot vendor-data: install the guest agent, clear the machine ID, power off.
 # Only attached while building; removed before the VM becomes a template.
+# Ubuntu: the initramfs names the NIC ens18 and leases with the MAC as client ID, but
+# cloud-init's netplan renames it eth0 and uses a DUID. When an upgrade re-triggers udev
+# (systemd 259.9, 2026-10-22), the NIC is renamed mid-run and gets a new IP, cutting the
+# test's SSH session. dhcp-identifier: mac keeps the same lease (no-op without netplan).
 pvesm set local --content "$(pvesh get /storage/local --output-format json | python3 -c 'import sys,json; c=set(json.load(sys.stdin)["content"].split(",")); c.add("snippets"); print(",".join(sorted(c)))')"
 mkdir -p /var/lib/vz/snippets
 cat > /var/lib/vz/snippets/$SNIPPET <<'YAML'
@@ -40,6 +44,15 @@ package_update: true
 package_upgrade: false
 packages:
   - qemu-guest-agent
+write_files:
+  - path: /etc/netplan/60-dhcp-mac.yaml
+    permissions: "0600"
+    content: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp-identifier: mac
 runcmd:
   - systemctl enable qemu-guest-agent
   - truncate -s 0 /etc/machine-id
