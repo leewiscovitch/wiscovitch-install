@@ -43,6 +43,7 @@ remove:
       - { id: Microsoft.WindowsSoundRecorder, name: Sound Recorder }
       - { id: MicrosoftCorporationII.MicrosoftFamily, name: Family }
       - { id: Microsoft.ZuneMusic, name: Media Player }
+      - { id: Microsoft.StartExperiencesApp, name: Start Experiences App }
 ---
 
 ## Before you start
@@ -150,8 +151,14 @@ Get-Content $log
 Install the latest stable PowerShell 7. Run the same command later to update it (winget upgrades it if it's already installed; `winget upgrade --all` also keeps it current). Run it from Windows PowerShell rather than from PowerShell 7 itself, so the installer isn't replacing the shell it's running in:
 
 ```powershell
-winget install --id Microsoft.PowerShell -e --source winget --installer-type wix --accept-source-agreements --accept-package-agreements
+if (Test-Path "$env:ProgramFiles\PowerShell\7\pwsh.exe") {
+    winget upgrade --id Microsoft.PowerShell -e --source winget --accept-source-agreements --accept-package-agreements
+} else {
+    winget install --id Microsoft.PowerShell -e --source winget --installer-type wix --accept-source-agreements --accept-package-agreements
+}
 ```
+
+If PowerShell 7 is already installed (by the **Over SSH** block, or updated by Windows Update), this only upgrades it. "No available upgrade found" means it's already current: Windows Update can install a new release before winget's catalog has it, and winget would otherwise try to install the older version over it, which fails.
 
 `--installer-type wix` picks the classic MSI, which installs to `C:\Program Files\PowerShell\7`. Without it, winget now defaults to the MSIX package, which lands in a versioned WindowsApps folder that the SSH step below can't point to. If an MSIX or Store copy is already installed, both can coexist.
 
@@ -272,6 +279,17 @@ Check the timeouts and lid setting:
 powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE
 powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE
 powercfg /query SCHEME_CURRENT 4f971e89-eebd-4455-a8de-9e59040e7347 5ca83367-6e45-459f-a27b-476b1d01c936
+```
+
+**No welcome screens or suggestions** after updates: turns off the three switches under **Settings → System → Notifications → Additional settings** (the "what's new" welcome experience, "finish setting up this device", and tips and suggestions):
+
+```powershell
+$cdm = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+Set-ItemProperty -Path $cdm -Name SubscribedContent-310093Enabled -Type DWord -Value 0   # welcome experience after updates
+Set-ItemProperty -Path $cdm -Name SubscribedContent-338389Enabled -Type DWord -Value 0   # tips and suggestions
+$upe = "HKCU:\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement"
+if (-not (Test-Path $upe)) { New-Item -Path $upe | Out-Null }
+Set-ItemProperty -Path $upe -Name ScoobeSystemSettingEnabled -Type DWord -Value 0       # "finish setting up this device"
 ```
 
 **Microsoft Edge:** skip the first-run setup (no welcome pages, no sign-in prompt, no importing other browsers' data) and hide the Copilot button and the sidebar. These are machine-wide Edge policies, so Edge will say "Your browser is managed by your organization"; `edge://policy` lists them. They apply the next time Edge starts:
