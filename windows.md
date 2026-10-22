@@ -95,6 +95,8 @@ while ((Get-Service wuauserv).Status -eq 'StopPending') { Start-Sleep 2 }; Start
 Get-WindowsUpdate -MicrosoftUpdate
 ```
 
+If **Settings → Windows Update** still lists updates after the command line finds nothing, the list is from an earlier scan (Settings doesn't refresh it after command-line installs). Click **Check for updates**, or run `UsoClient StartInteractiveScan`, and it clears. `Get-WUHistory -Last 30` shows what was installed (times are in UTC).
+
 **Update for Windows Security platform (KB5007651)** can show up again on every run, even though each run reports it as installed. Once it's the only thing left, Windows is up to date; it stops appearing after the Security app updates itself through the Store.
 
 Tell the Microsoft Store to check for and install updates for all Store apps. It runs in the background; progress shows in **Store → Downloads**:
