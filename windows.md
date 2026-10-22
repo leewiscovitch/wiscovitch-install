@@ -281,6 +281,39 @@ powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE
 powercfg /query SCHEME_CURRENT 4f971e89-eebd-4455-a8de-9e59040e7347 5ca83367-6e45-459f-a27b-476b1d01c936
 ```
 
+**File Explorer and taskbar** (Settings → System → Advanced): show file extensions, hidden and system files, and the full path in the title bar, and add **End task** to the taskbar's right-click menu:
+
+```powershell
+$adv = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+Set-ItemProperty -Path $adv -Name HideFileExt -Type DWord -Value 0       # show file extensions
+Set-ItemProperty -Path $adv -Name Hidden -Type DWord -Value 1            # show hidden files
+Set-ItemProperty -Path $adv -Name ShowSuperHidden -Type DWord -Value 1   # show protected system files
+$cab = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState"
+if (-not (Test-Path $cab)) { New-Item -Path $cab -Force | Out-Null }
+Set-ItemProperty -Path $cab -Name FullPath -Type DWord -Value 1          # full path in the title bar
+$tds = "$adv\TaskbarDeveloperSettings"
+if (-not (Test-Path $tds)) { New-Item -Path $tds -Force | Out-Null }
+Set-ItemProperty -Path $tds -Name TaskbarEndTask -Type DWord -Value 1    # End task on taskbar right-click
+```
+
+**Developer settings** (Settings → System → Advanced): Developer Mode, long file paths (beyond 260 characters), `sudo` in inline mode (runs in the same window, like Linux; elevate with `sudo <command>`), and Windows Terminal as the default terminal for console apps:
+
+```powershell
+$dev = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+if (-not (Test-Path $dev)) { New-Item -Path $dev -Force | Out-Null }
+Set-ItemProperty -Path $dev -Name AllowDevelopmentWithoutDevLicense -Type DWord -Value 1   # Developer Mode
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name LongPathsEnabled -Type DWord -Value 1   # long paths
+$sudo = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Sudo"
+if (-not (Test-Path $sudo)) { New-Item -Path $sudo -Force | Out-Null }
+Set-ItemProperty -Path $sudo -Name Enabled -Type DWord -Value 3          # sudo: 1 new window, 2 input closed, 3 inline
+$con = "HKCU:\Console\%%Startup"
+if (-not (Test-Path $con)) { New-Item -Path $con -Force | Out-Null }
+Set-ItemProperty -Path $con -Name DelegationConsole -Value "{2EACA947-7F5F-4CFA-BA87-8F7FBEEFBE69}"    # default terminal:
+Set-ItemProperty -Path $con -Name DelegationTerminal -Value "{E12CFF52-A866-4C77-9A90-F570A7AA2C6B}"   # Windows Terminal
+```
+
+Long paths take effect for apps started after a restart. `sudo` needs Windows 11 24H2 or newer.
+
 **No welcome screens or suggestions** after updates: turns off the three switches under **Settings → System → Notifications → Additional settings** (the "what's new" welcome experience, "finish setting up this device", and tips and suggestions):
 
 ```powershell
@@ -305,7 +338,7 @@ Set-ItemProperty -Path $p -Name HubsSidebarEnabled -Type DWord -Value 0         
 
 **Edge search engine:** set it by hand. The policy for it only works on PCs joined to a domain or managed by an organization. Open `edge://settings/search` in Edge (type it in the address bar; links to `edge://` pages don't work from websites) and set **Search engine used in the address bar** to **Google**.
 
-Restart Explorer to apply the theme and Alt+Tab changes now (the taskbar disappears for a moment). The touchpad change applies after you sign out and back in:
+Restart Explorer to apply the theme, Alt+Tab, File Explorer and taskbar changes now (the taskbar disappears for a moment). The touchpad change applies after you sign out and back in:
 
 ```powershell
 Stop-Process -Name explorer -Force
