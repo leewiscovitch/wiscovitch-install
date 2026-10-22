@@ -19,6 +19,7 @@ Set-Content -Path $results -Value $null -Encoding utf8
 $skip = [ordered]@{
     'Get-WindowsUpdate[^\r\n]*-Install' = 'installs updates and reboots (30+ min)'
     'Stop-Process -Name explorer'       = 'no desktop session over SSH'
+    'Restart-Computer'                  = 'the test reboots separately and checks afterwards'
 }
 if ($Target -eq 'ci') {
     $skip['UpdateScanMethod'] = 'Windows Server has no Microsoft Store'

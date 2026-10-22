@@ -261,4 +261,12 @@ _No steps yet._
 
 ## Verify
 
+Restart so every change takes effect: theme and Alt+Tab everywhere, touchpad scrolling, fast startup, PATH for newly installed tools, and anything Windows Update left pending. `-Force` doesn't wait for apps to close, so save open work first:
+
+```powershell
+Restart-Computer -Force
+```
+
+After it's back up:
+
 {% include os-info.md %}
