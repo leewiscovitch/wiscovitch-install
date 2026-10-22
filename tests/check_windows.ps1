@@ -1,0 +1,40 @@
+# After the Windows page has run and the VM has rebooted, check that its changes
+# stuck. Runs on the VM as tech; prints one "name<TAB>status<TAB>note" line per check.
+$ProgressPreference = 'SilentlyContinue'
+$ErrorActionPreference = 'SilentlyContinue'
+
+function Check($name, $note, [scriptblock] $test) {
+    $ok = $false
+    try { $ok = [bool](& $test) } catch { $note = "$note ($($_.Exception.Message))" }
+    "check-$name`t$(if ($ok) { 'pass' } else { 'fail' })`t$note"
+}
+function Reg($path, $name) { (Get-ItemProperty -Path $path -Name $name).$name }
+
+$pwshPath = "$env:ProgramFiles\PowerShell\7\pwsh.exe"
+$wt = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+$keys = "$env:ProgramData\ssh\administrators_authorized_keys"
+$github = @((Invoke-RestMethod https://github.com/leewiscovitch.keys) -split "`n" | Where-Object { $_ -match '^ssh-' })
+
+Check execution-policy 'LocalMachine execution policy is Bypass'      { (Get-ExecutionPolicy -Scope LocalMachine) -eq 'Bypass' }
+Check timezone        'time zone is Eastern Standard Time'             { (Get-TimeZone).Id -eq 'Eastern Standard Time' }
+Check time-service    'Windows Time service set to start automatically' { (Get-Service w32time).StartType -eq 'Automatic' }
+Check pwsh            'PowerShell 7 installed in Program Files'        { (Test-Path $pwshPath) -and ((& $pwshPath -NoProfile -Command '$PSVersionTable.PSVersion.Major') -eq '7') }
+Check pwsh-policy     'PowerShell 7 execution policy is Bypass'         { (& $pwshPath -NoProfile -Command 'Get-ExecutionPolicy -Scope LocalMachine') -eq 'Bypass' }
+Check terminal        'Windows Terminal installed'                     { [bool](Get-AppxPackage -Name Microsoft.WindowsTerminal) }
+Check terminal-default 'Terminal default profile is PowerShell 7'      { (Get-Content $wt -Raw) -match '"defaultProfile"\s*:\s*"\{574e775e-4f2a-5b96-ac1e-a2962a402336\}"' }
+Check git             'Git installed'                                   { [bool](Get-Command git) }
+Check gh              'GitHub CLI installed'                            { [bool](Get-Command gh) }
+Check git-identity    'git name/email from the prompts'                { ((git config --global user.name) -eq 'CI Test') -and ((git config --global user.email) -eq 'ci@example.com') }
+Check sshd            'sshd running and automatic'                     { $s = Get-Service sshd; $s.Status -eq 'Running' -and $s.StartType -eq 'Automatic' }
+Check ssh-firewall    'SSH firewall rule allows any profile'           { (Get-NetFirewallRule -Name OpenSSH-Server-In-TCP).Profile -eq 'Any' }
+Check network-private 'network marked Private'                         { @(Get-NetConnectionProfile | Where-Object NetworkCategory -ne 'Private').Count -eq 0 }
+Check ssh-shell       'SSH default shell is PowerShell 7'              { (Reg 'HKLM:\SOFTWARE\OpenSSH' DefaultShell) -eq $pwshPath }
+Check github-keys     "all $($github.Count) GitHub keys trusted"       { $have = Get-Content $keys; @($github | Where-Object { $have -notcontains $_.Trim() }).Count -eq 0 }
+Check keys-acl        'admin keys file limited to Administrators/SYSTEM' { $a = (Get-Acl $keys).Access | ForEach-Object { $_.IdentityReference.Value }; @($a | Where-Object { $_ -notin 'BUILTIN\Administrators', 'NT AUTHORITY\SYSTEM' }).Count -eq 0 }
+Check ssh-config      'ssh client config: accept-new, known hosts NUL' { $c = Get-Content "$HOME\.ssh\config" -Raw; $c -match 'StrictHostKeyChecking=accept-new' -and $c -match 'UserKnownHostsFile=NUL' }
+Check dark-theme      'dark theme for apps and Windows'                { (Reg 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' AppsUseLightTheme) -eq 0 -and (Reg 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' SystemUsesLightTheme) -eq 0 }
+Check touchpad-scroll 'touchpad scrolling: normal'                     { (Reg 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad' ScrollDirection) -eq -1 }
+Check alt-tab         'Alt+Tab shows windows only'                     { (Reg 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' MultiTaskingAltTabFilter) -eq 3 }
+Check fast-startup    'fast startup off'                               { (Reg 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power' HiberbootEnabled) -eq 0 }
+Check power-ac        'plugged in: screen 30 min, never sleep'         { $v = powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE | Out-String; $s = powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE | Out-String; $v -match 'Current AC Power Setting Index: 0x00000708' -and $s -match 'Current AC Power Setting Index: 0x00000000' }
+Check removed-apps    'sample removed apps are gone (Solitaire, Clipchamp, News)' { @(Get-AppxPackage -AllUsers | Where-Object { $_.Name -in 'Microsoft.MicrosoftSolitaireCollection', 'Clipchamp.Clipchamp', 'Microsoft.BingNews' }).Count -eq 0 }

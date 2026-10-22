@@ -1,4 +1,4 @@
-# Runs each Linux page on a fresh Proxmox VM in the homelab, reboots it, and checks
+# Runs each page on a fresh Proxmox VM (Linux and Windows 11) in the homelab, reboots it, and checks
 # that the page's changes survived. Uses the self-hosted runners in CT 9050 (see
 # proxmox/README.md). Blocks come from the live site, like the container tests.
 #
@@ -43,12 +43,14 @@ jobs:
     needs: cleanup
     name: ${{ matrix.page }} on ${{ matrix.os }}
     runs-on: [self-hosted, proxmox]
-    timeout-minutes: 45
+    timeout-minutes: 90   # Windows: winget upgrade --all and PowerShell 7 take a while
     strategy:
       fail-fast: false
       max-parallel: 3
       matrix:
         include:
+          # Windows first: it takes longest
+          - { page: /windows/, os: "Windows 11", template: 9010, runner: run_vm_windows.sh }
           - { page: /ubuntu/server/, os: "Ubuntu 26.04", template: 9000 }
           - { page: /fedora/, os: "Fedora 44", template: 9001 }
           - { page: /alma/, os: "AlmaLinux 9", template: 9002 }
@@ -63,7 +65,7 @@ jobs:
           python3 tests/extract.py --wait "$GITHUB_SHA" "${{ matrix.page }}" blocks
 
       - name: Run the page on a fresh VM, reboot, verify
-        run: bash tests/run_vm.sh ${{ matrix.template }} "vmtest-${{ github.run_id }}-${{ strategy.job-index }}" blocks
+        run: bash tests/${{ matrix.runner || 'run_vm.sh' }} ${{ matrix.template }} "vmtest-${{ github.run_id }}-${{ strategy.job-index }}" blocks
 
       - name: Report
         if: always()
