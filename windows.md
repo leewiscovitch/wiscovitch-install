@@ -323,7 +323,10 @@ Set-ItemProperty -Path $cdm -Name SubscribedContent-338389Enabled -Type DWord -V
 $upe = "HKCU:\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement"
 if (-not (Test-Path $upe)) { New-Item -Path $upe | Out-Null }
 Set-ItemProperty -Path $upe -Name ScoobeSystemSettingEnabled -Type DWord -Value 0       # "finish setting up this device"
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name Start_AccountNotifications -Type DWord -Value 0   # no "Back up your PC to Microsoft account" in Start
 ```
+
+The last line is **Settings → Personalization → Start → Show account-related notifications**; it takes effect when Explorer restarts (below).
 
 **Microsoft Edge:** skip the first-run setup (no welcome pages, no sign-in prompt, no importing other browsers' data) and hide the Copilot button and the sidebar. These are machine-wide Edge policies, so Edge will say "Your browser is managed by your organization"; `edge://policy` lists them. They apply the next time Edge starts:
 
