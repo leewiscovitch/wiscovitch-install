@@ -27,7 +27,7 @@ Check git             'Git installed'                                   { [bool]
 Check gh              'GitHub CLI installed'                            { [bool](Get-Command gh) }
 Check git-identity    'git name/email from the prompts'                { ((git config --global user.name) -eq $GitName) -and ((git config --global user.email) -eq $GitEmail) }
 Check sshd            'sshd running and automatic'                     { $s = Get-Service sshd; $s.Status -eq 'Running' -and $s.StartType -eq 'Automatic' }
-Check ssh-firewall    'SSH firewall rule allows any profile'           { (Get-NetFirewallRule -Name OpenSSH-Server-In-TCP).Profile -eq 'Any' }
+Check ssh-firewall    'SSH firewall rule allows any profile'           { $r = @(Get-NetFirewallRule -DisplayName 'OpenSSH SSH Server*'); $r.Count -gt 0 -and @($r | Where-Object Profile -ne 'Any').Count -eq 0 }
 Check network-private 'network marked Private'                         { @(Get-NetConnectionProfile | Where-Object NetworkCategory -ne 'Private').Count -eq 0 }
 Check ssh-shell       'SSH default shell is PowerShell 7'              { (Reg 'HKLM:\SOFTWARE\OpenSSH' DefaultShell) -eq $pwshPath }
 Check github-keys     "all $($github.Count) GitHub keys trusted"       { $have = Get-Content $keys; @($github | Where-Object { $have -notcontains $_.Trim() }).Count -eq 0 }
@@ -41,7 +41,10 @@ Check power-ac        'plugged in: screen 30 min, never sleep'         { $v = po
 # The Remove apps list, read from the page's own blocks ('Name'  # comment lines)
 $removeList = @(Get-ChildItem "$PSScriptRoot\blocks\*remove-apps*.powershell" -ErrorAction SilentlyContinue |
     Get-Content | Select-String -Pattern "^\s*'([^']+)'\s*#" | ForEach-Object { $_.Matches[0].Groups[1].Value })
-$leftUser = @(Get-AppxPackage -AllUsers | Where-Object Name -in $removeList | Select-Object -ExpandProperty Name -Unique)
+# Count an app only if it's installed for some account: Windows can keep a stub
+# registration with no users (e.g. MSTeams_1.0.0.1) after the real package is removed.
+$leftUser = @(Get-AppxPackage -AllUsers | Where-Object { $_.Name -in $removeList -and ($_.PackageUserInformation | Where-Object InstallState -eq 'Installed') } |
+    Select-Object -ExpandProperty Name -Unique)
 $leftProv = @(Get-AppxProvisionedPackage -Online | Where-Object DisplayName -in $removeList | Select-Object -ExpandProperty DisplayName)
 Check removed-apps        "all $($removeList.Count) Remove-apps entries uninstalled$(if ($leftUser) { '; still installed: ' + ($leftUser -join ', ') })" { $removeList.Count -gt 0 -and $leftUser.Count -eq 0 }
 Check removed-provisioned "no Remove-apps entries provisioned for new users$(if ($leftProv) { '; still provisioned: ' + ($leftProv -join ', ') })" { $leftProv.Count -eq 0 }

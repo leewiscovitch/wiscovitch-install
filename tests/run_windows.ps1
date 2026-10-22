@@ -23,6 +23,10 @@ $skip = [ordered]@{
 if ($Target -eq 'ci') {
     $skip['UpdateScanMethod'] = 'Windows Server has no Microsoft Store'
     $skip['winget upgrade --all'] = 'would upgrade every tool on the CI image (install steps exercise winget)'
+} else {
+    # Over SSH the winget command can't start (no desktop session); the page's
+    # "Over SSH" install block covers the same packages and is run instead.
+    $skip['(?m)^winget '] = 'winget command needs a desktop session (Over SSH block runs instead)'
 }
 $tmp = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }
 

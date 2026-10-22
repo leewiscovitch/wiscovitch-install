@@ -1,18 +1,26 @@
 {%- assign pm = site.data.pm[page.pm] -%}
 {% if pm.lang == "powershell" -%}
-Accept SSH logins with your keys ([how keys work]({{ '/ssh/' | relative_url }})). Install and start the OpenSSH server:
+Accept SSH logins with your keys ([how keys work]({{ '/ssh/' | relative_url }})). Install and start the OpenSSH server. This uses Microsoft's OpenSSH {{ site.openssh_msi.version }} MSI from GitHub, which installs in seconds; the built-in "OpenSSH Server" feature comes from Windows Update and can take many minutes. If an SSH server is already installed (either kind), it's kept as is:
 
 ```powershell
-Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+if (Get-Service sshd -ErrorAction Ignore) {
+    "An SSH server is already installed; keeping it."
+} else {
+    $msi = "$env:TEMP\OpenSSH-Win64.msi"
+    Invoke-WebRequest '{{ site.openssh_msi.url }}' -OutFile $msi -UseBasicParsing
+    if ((Get-FileHash $msi -Algorithm SHA256).Hash -ne '{{ site.openssh_msi.sha256 }}') { throw 'OpenSSH MSI checksum mismatch; not installing.' }
+    Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait
+}
 Set-Service -Name sshd -StartupType Automatic
 Start-Service sshd
+Get-Service sshd
 ```
 
-Let SSH through the firewall. Windows marks a new network as Public, and the OpenSSH rule only allows Private networks, so out of the box the server can't be reached from the LAN. This marks the current network Private and allows the SSH rule on every network type:
+Let SSH through the firewall. Windows marks a new network as Public, and the OpenSSH rule only allows Private networks, so out of the box the server can't be reached from the LAN. This marks the current network Private and allows the SSH rule on every network type (the rule's display name is "OpenSSH SSH Server (sshd)" for the built-in server, "OpenSSH SSH Server Preview (sshd)" for the MSI):
 
 ```powershell
 Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private
-Set-NetFirewallRule -Name OpenSSH-Server-In-TCP -Profile Any
+Get-NetFirewallRule -DisplayName 'OpenSSH SSH Server*' | Set-NetFirewallRule -Profile Any
 ```
 
 Trust the keys published at [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys). Because `{{ site.user }}` is an administrator, Windows reads them from a shared file instead of `~\.ssh\authorized_keys`, and that file must be locked to Administrators and SYSTEM:

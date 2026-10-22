@@ -15,8 +15,8 @@ Get-AppxProvisionedPackage -Online | Where-Object DisplayName -in $apps | Remove
 OneDrive is a regular desktop program, not a Store app, so it has its own uninstaller:
 
 ```powershell
-Stop-Process -Name OneDrive -Force -ErrorAction SilentlyContinue
-$u = (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\OneDriveSetup.exe' -ErrorAction SilentlyContinue).UninstallString
+Stop-Process -Name OneDrive -Force -ErrorAction Ignore
+$u = (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\OneDriveSetup.exe' -ErrorAction Ignore).UninstallString
 if ($u -match '^"([^"]+)"\s*(.*)$') { Start-Process -FilePath $Matches[1] -ArgumentList $Matches[2] -Wait }
 ```
 {% endif %}{% endfor %}

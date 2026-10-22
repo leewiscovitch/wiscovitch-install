@@ -93,6 +93,29 @@ Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseMode
 
 {% include install.md %}
 
+**Over SSH (no desktop session):** the `winget` command, and the PowerShell module's usual mode, only work in a desktop session, so the block above fails when run over SSH. This installs the same packages from an SSH session: PowerShell 7 from its MSI, then Microsoft's WinGet PowerShell module, which runs the installs as SYSTEM through a one-off scheduled task. Store (MSIX) apps such as Windows Terminal can't be installed this way, but Windows 11 already includes Terminal.
+
+```powershell
+$pwsh = "$env:ProgramFiles\PowerShell\7\pwsh.exe"
+if (-not (Test-Path $pwsh)) {
+    $msi = "$env:TEMP\PowerShell-7-win-x64.msi"
+    Invoke-WebRequest '{{ site.pwsh_msi.url }}' -OutFile $msi -UseBasicParsing
+    if ((Get-FileHash $msi -Algorithm SHA256).Hash -ne '{{ site.pwsh_msi.sha256 }}') { throw 'PowerShell MSI checksum mismatch; not installing.' }
+    Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait
+}
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+Install-Module -Name Microsoft.WinGet.Client -Scope AllUsers -Force
+$ids = @({% assign first = true %}{% for p in page.packages %}{% unless p == 'Microsoft.WindowsTerminal' %}{% unless first %}, {% endunless %}'{{ p }}'{% assign first = false %}{% endunless %}{% endfor %})
+$script = "$env:ProgramData\winget-over-ssh.ps1"
+$log = "$env:ProgramData\winget-over-ssh.log"
+Set-Content -Path $script -Value (@('Import-Module Microsoft.WinGet.Client') + ($ids | ForEach-Object { "Install-WinGetPackage -Id $_ -Source winget -Mode Silent -Scope System | Select-Object Id, Status, InstallerErrorCode" }))
+Register-ScheduledTask -TaskName winget-over-ssh -User SYSTEM -RunLevel Highest -Force -Action (New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -Command & '$script' *> '$log'") | Out-Null
+Start-ScheduledTask -TaskName winget-over-ssh
+do { Start-Sleep 5 } while ((Get-ScheduledTask -TaskName winget-over-ssh).State -eq 'Running')
+Unregister-ScheduledTask -TaskName winget-over-ssh -Confirm:$false
+Get-Content $log
+```
+
 ## PowerShell 7
 
 Install the latest stable PowerShell 7. Run the same command later to update it (winget upgrades it if it's already installed; `winget upgrade --all` also keeps it current). Run it from Windows PowerShell rather than from PowerShell 7 itself, so the installer isn't replacing the shell it's running in:
