@@ -300,6 +300,22 @@ if (-not (Test-Path $tds)) { New-Item -Path $tds -Force | Out-Null }
 Set-ItemProperty -Path $tds -Name TaskbarEndTask -Type DWord -Value 1    # End task on taskbar right-click
 ```
 
+**Taskbar** (Settings → Personalization → Taskbar): align left, hide Search, Task view and the Copilot button, hide Widgets, and show the taskbar on every display. Windows blocks scripts from flipping the normal Widgets switch, so Widgets is turned off with a machine policy instead (the switch then shows as managed):
+
+```powershell
+$adv = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+Set-ItemProperty -Path $adv -Name TaskbarAl -Type DWord -Value 0            # align left
+Set-ItemProperty -Path $adv -Name ShowTaskViewButton -Type DWord -Value 0   # no Task view button
+Set-ItemProperty -Path $adv -Name ShowCopilotButton -Type DWord -Value 0    # no Copilot button (where the build has one)
+Set-ItemProperty -Path $adv -Name MMTaskbarEnabled -Type DWord -Value 1     # taskbar on all displays
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" -Name SearchboxTaskbarMode -Type DWord -Value 0   # Search hidden
+$dsh = "HKLM:\SOFTWARE\Policies\Microsoft\Dsh"
+if (-not (Test-Path $dsh)) { New-Item -Path $dsh -Force | Out-Null }
+Set-ItemProperty -Path $dsh -Name AllowNewsAndInterests -Type DWord -Value 0   # no Widgets
+```
+
+Search still works from the Start menu: open Start and type.
+
 **Developer settings** (Settings → System → Advanced): Developer Mode, long file paths (beyond 260 characters), `sudo` in inline mode (runs in the same window, like Linux; elevate with `sudo <command>`), and Windows Terminal as the default terminal for console apps:
 
 ```powershell
