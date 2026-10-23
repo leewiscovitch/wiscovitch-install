@@ -18,6 +18,7 @@ remove:
       - { id: Microsoft.Getstarted, name: Tips }
       - { id: Microsoft.GetHelp, name: Get Help }
       - { id: Microsoft.WindowsFeedbackHub, name: Feedback Hub }
+      - { id: MicrosoftWindows.Client.WebExperience, name: Widgets }
   - group: Microsoft 365, Outlook, Teams and OneDrive
     apps:
       - { id: Microsoft.MicrosoftOfficeHub, name: Microsoft 365 app }
@@ -291,7 +292,7 @@ if (-not (Test-Path $tds)) { New-Item -Path $tds -Force | Out-Null }
 Set-ItemProperty -Path $tds -Name TaskbarEndTask -Type DWord -Value 1    # End task on taskbar right-click
 ```
 
-**Taskbar** (Settings → Personalization → Taskbar): align left, hide Search, Task view and the Copilot button, hide Widgets, and show the taskbar on every display. Windows blocks scripts from flipping the normal Widgets switch, so Widgets is turned off with a machine policy instead (the switch then shows as managed):
+**Taskbar** (Settings → Personalization → Taskbar): align left, hide Search, Task view and the Copilot button, and show the taskbar on every display. Widgets is removed in **Remove apps** instead (Windows protects its switch and policy from scripts):
 
 ```powershell
 $adv = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
@@ -300,9 +301,6 @@ Set-ItemProperty -Path $adv -Name ShowTaskViewButton -Type DWord -Value 0   # no
 Set-ItemProperty -Path $adv -Name ShowCopilotButton -Type DWord -Value 0    # no Copilot button (where the build has one)
 Set-ItemProperty -Path $adv -Name MMTaskbarEnabled -Type DWord -Value 1     # taskbar on all displays
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" -Name SearchboxTaskbarMode -Type DWord -Value 0   # Search hidden
-$dsh = "HKLM:\SOFTWARE\Policies\Microsoft\Dsh"
-if (-not (Test-Path $dsh)) { New-Item -Path $dsh -Force | Out-Null }
-Set-ItemProperty -Path $dsh -Name AllowNewsAndInterests -Type DWord -Value 0   # no Widgets
 ```
 
 Search still works from the Start menu: open Start and type.
