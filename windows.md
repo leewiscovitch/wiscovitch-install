@@ -43,7 +43,6 @@ remove:
       - { id: Microsoft.WindowsSoundRecorder, name: Sound Recorder }
       - { id: MicrosoftCorporationII.MicrosoftFamily, name: Family }
       - { id: Microsoft.ZuneMusic, name: Media Player }
-      - { id: Microsoft.StartExperiencesApp, name: Start Experiences App }
       - { id: 7EE7776C.LinkedInforWindows, name: LinkedIn }
       - { id: 5319275A.WhatsAppDesktop, name: WhatsApp }
 ---
