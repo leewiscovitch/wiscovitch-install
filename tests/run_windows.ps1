@@ -60,6 +60,9 @@ foreach ($f in Get-ChildItem -Path $Dir -Filter *.powershell | Sort-Object Name)
         $answers = '@{ "Git name" = ''' + $GitName.Replace("'", "''") + '''; "Git email" = ''' + $GitEmail.Replace("'", "''") + ''' }'
         [void]$sb.AppendLine('function Read-Host { param($Prompt) ' + $answers + '[$Prompt] }')
     }
+    # When a block runs `winget upgrade --all` twice, the first run may stop with
+    # "Cancelled" (0x80004004) after updating winget itself; the second run must succeed
+    $upgradeAll = @($ast.EndBlock.Statements | Where-Object { $_.Extent.Text -match '^\s*winget upgrade --all' })
     foreach ($st in $ast.EndBlock.Statements) {
         [void]$sb.AppendLine('$global:LASTEXITCODE = 0; $errBefore = $Error.Count')
         [void]$sb.AppendLine($st.Extent.Text)
@@ -67,7 +70,8 @@ foreach ($f in Get-ChildItem -Path $Dir -Filter *.powershell | Sort-Object Name)
         # try/catch, or a module's SilentlyContinue), so those don't count
         [void]$sb.AppendLine('if ($?) { while ($Error.Count -gt $errBefore) { $Error.RemoveAt(0) } }')
         $label = ($st.Extent.Text -split "`n")[0].Trim().Replace("'", "''")
-        [void]$sb.AppendLine("if (`$LASTEXITCODE -and `$okCodes -notcontains `$LASTEXITCODE) { `$nativeFailures += 'exit ' + `$LASTEXITCODE + ' from: $label' }")
+        $extraOk = if ($upgradeAll.Count -ge 2 -and $st -eq $upgradeAll[0]) { ' -and $LASTEXITCODE -ne -2147467260' } else { '' }
+        [void]$sb.AppendLine("if (`$LASTEXITCODE -and `$okCodes -notcontains `$LASTEXITCODE$extraOk) { `$nativeFailures += 'exit ' + `$LASTEXITCODE + ' from: $label' }")
     }
     [void]$sb.AppendLine('if ($nativeFailures) { $nativeFailures | ForEach-Object { "NATIVE FAILURE: $_" }; exit 3 }')
     # $Error also holds errors that cmdlets and modules hid with -ErrorAction SilentlyContinue,

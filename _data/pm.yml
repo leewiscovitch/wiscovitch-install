@@ -40,5 +40,6 @@ winget:
   update_label: "Update apps installed through winget, including Store apps winget can see:"
   update:
     - "winget upgrade --all --accept-source-agreements --accept-package-agreements"
+    - "winget upgrade --all --accept-source-agreements --accept-package-agreements   # again: the first run stops after updating winget itself"
   install: "winget install -e --accept-source-agreements --accept-package-agreements --id"
   one_per_line: true

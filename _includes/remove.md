@@ -1,4 +1,4 @@
-Remove built-in apps with PowerShell's app cmdlets. For each group, the first line removes the apps for every user account, and the second removes their provisioned copies, so Windows doesn't reinstall them for new accounts. Apps that aren't installed are skipped, so any group is safe to re-run (feature updates sometimes bring apps back). Works in Terminal and over SSH.
+Remove built-in apps with PowerShell's app cmdlets. For each group, the first line removes the apps for every user account, and the second removes their provisioned copies, so Windows doesn't reinstall them for new accounts. Apps that aren't installed are skipped, and so are placeholder entries with no files behind them (a fresh install can list a Teams stub that can't be removed), so any group is safe to re-run (feature updates sometimes bring apps back). Works in Terminal and over SSH.
 
 {% for g in page.remove -%}
 {%- assign appx = g.apps | where_exp: "a", "a.id != 'Microsoft.OneDrive'" -%}
@@ -8,7 +8,7 @@ Remove built-in apps with PowerShell's app cmdlets. For each group, the first li
 $apps = @(
 {% for a in appx %}    '{{ a.id }}'  # {{ a.name }}
 {% endfor %})
-Get-AppxPackage -AllUsers | Where-Object Name -in $apps | Remove-AppxPackage -AllUsers
+Get-AppxPackage -AllUsers | Where-Object { $_.Name -in $apps -and $_.InstallLocation -and (Test-Path $_.InstallLocation) } | Remove-AppxPackage -AllUsers
 Get-AppxProvisionedPackage -Online | Where-Object DisplayName -in $apps | Remove-AppxProvisionedPackage -Online | Out-Null
 ```
 {% for a in g.apps %}{% if a.id == 'Microsoft.OneDrive' %}

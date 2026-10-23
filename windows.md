@@ -114,16 +114,9 @@ Tell the Microsoft Store to check for and install updates for all Store apps. It
 Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseModernAppManagement_AppManagement01" | Invoke-CimMethod -MethodName UpdateScanMethod
 ```
 
-Update winget itself first. A fresh install ships an older App Installer (which provides `winget`), and winget can't replace itself mid-run: `winget upgrade` stops with "Restart the application" or "file in use". Microsoft's WinGet PowerShell module updates it and its dependencies from outside winget:
-
-```powershell
-{% include ps-module.md name="Microsoft.WinGet.Client" %}
-Import-Module Microsoft.WinGet.Client
-Repair-WinGetPackageManager -Latest
-winget --version   # v{{ site.winget_version }} or newer
-```
-
 {% include update.md %}
+
+The command runs twice on purpose. A fresh install ships an older `winget`, and when `winget upgrade --all` updates winget itself it prints "Restart the application to complete the upgrade", then stops with "Cancelled"; the second run, with the new winget, upgrades the rest. If nothing needed updating, the second run just says so. Afterwards `winget --version` shows v{{ site.winget_version }} or newer.
 
 ## Install
 
@@ -398,6 +391,8 @@ Stop-Process -Name explorer -Force
 _No steps yet._
 
 ## Verify
+
+{% include remove-again.md %}
 
 Restart so every change takes effect: theme and Alt+Tab everywhere, touchpad scrolling, fast startup, PATH for newly installed tools, and anything Windows Update left pending. `-Force` doesn't wait for apps to close, so save open work first:
 

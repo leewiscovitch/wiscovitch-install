@@ -50,9 +50,9 @@ Check power-ac       'plugged in: screen 30 min, never sleep'         { $v = pow
 # The Remove apps list, read from the page's own blocks ('Name'  # comment lines)
 $removeList = @(Get-ChildItem "$PSScriptRoot\blocks\*remove-apps*.powershell" -ErrorAction SilentlyContinue |
     Get-Content | Select-String -Pattern "^\s*'([^']+)'\s*#" | ForEach-Object { $_.Matches[0].Groups[1].Value })
-# Count an app only if it's installed for some account: Windows can keep a stub
-# registration with no users (e.g. MSTeams_1.0.0.1) after the real package is removed.
-$leftUser = @(Get-AppxPackage -AllUsers | Where-Object { $_.Name -in $removeList -and ($_.PackageUserInformation | Where-Object InstallState -eq 'Installed') } |
+# Count an app only if it's installed for some account and has files: Windows can keep a
+# stub registration (e.g. MSTeams_1.0.0.1) with no users or no files, which can't be removed.
+$leftUser = @(Get-AppxPackage -AllUsers | Where-Object { $_.Name -in $removeList -and ($_.PackageUserInformation | Where-Object InstallState -eq 'Installed') -and $_.InstallLocation -and (Test-Path $_.InstallLocation) } |
     Select-Object -ExpandProperty Name -Unique)
 $leftProv = @(Get-AppxProvisionedPackage -Online | Where-Object DisplayName -in $removeList | Select-Object -ExpandProperty DisplayName)
 Check removed-apps        "all $($removeList.Count) Remove-apps entries uninstalled$(if ($leftUser) { '; still installed: ' + ($leftUser -join ', ') })" { $removeList.Count -gt 0 -and $leftUser.Count -eq 0 }
