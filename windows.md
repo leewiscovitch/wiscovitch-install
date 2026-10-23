@@ -285,13 +285,13 @@ powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE
 powercfg /query SCHEME_CURRENT 4f971e89-eebd-4455-a8de-9e59040e7347 5ca83367-6e45-459f-a27b-476b1d01c936
 ```
 
-**File Explorer and taskbar** (Settings → System → Advanced): show file extensions, hidden and system files, and the full path in the title bar, and add **End task** to the taskbar's right-click menu:
+**File Explorer and taskbar** (Settings → System → Advanced): show file extensions, hidden files and the full path in the title bar, and add **End task** to the taskbar's right-click menu. Protected system files such as `desktop.ini` stay hidden (they'd clutter the desktop), so the **Show hidden and system files** switch in Settings, which covers both, shows as off:
 
 ```powershell
 $adv = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
 Set-ItemProperty -Path $adv -Name HideFileExt -Type DWord -Value 0       # show file extensions
 Set-ItemProperty -Path $adv -Name Hidden -Type DWord -Value 1            # show hidden files
-Set-ItemProperty -Path $adv -Name ShowSuperHidden -Type DWord -Value 1   # show protected system files
+Set-ItemProperty -Path $adv -Name ShowSuperHidden -Type DWord -Value 0   # keep protected system files (desktop.ini) hidden
 $cab = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState"
 if (-not (Test-Path $cab)) { New-Item -Path $cab -Force | Out-Null }
 Set-ItemProperty -Path $cab -Name FullPath -Type DWord -Value 1          # full path in the title bar
