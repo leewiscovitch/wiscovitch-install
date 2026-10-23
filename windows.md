@@ -79,11 +79,8 @@ Install the PSWindowsUpdate module (once per machine). It's downloaded straight 
 ```powershell
 {% include ps-module.md name="PSWindowsUpdate" %}
 Import-Module PSWindowsUpdate
-Add-WUServiceManager -MicrosoftUpdate -Confirm:$false
 (Get-Module PSWindowsUpdate).Version.ToString()   # {{ site.ps_modules.PSWindowsUpdate.version }}
 ```
-
-The last line turns on Microsoft Update (the same as **Settings → Windows Update → Advanced options → Receive updates for other Microsoft products**), so `-MicrosoftUpdate` below doesn't have to register it on the fly.
 
 Right after boot, Windows Update can still be starting up, and `Get-WindowsUpdate` then fails with "Value does not fall within the expected range". The commands below retry up to four times, 30 seconds apart, and print "Windows Update isn't ready" while they wait.
 
