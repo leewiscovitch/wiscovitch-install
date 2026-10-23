@@ -348,6 +348,15 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 
 The last line is **Settings → Personalization → Start → Show account-related notifications**; it takes effect when Explorer restarts (below).
 
+**Start menu: All apps as a list** (the view switch next to **All** in Start). Start reads it when it next opens, so its process is restarted:
+
+```powershell
+$start = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Start"
+if (-not (Test-Path $start)) { New-Item -Path $start -Force | Out-Null }
+Set-ItemProperty -Path $start -Name AllAppsViewMode -Type DWord -Value 2   # 0 category, 1 grid, 2 list
+Stop-Process -Name StartMenuExperienceHost -Force -ErrorAction Ignore
+```
+
 **No "Learn about this picture" icon** on the desktop when the wallpaper is **Windows Spotlight** (the daily Bing pictures). The pictures keep changing; only the icon goes:
 
 ```powershell
