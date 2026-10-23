@@ -69,6 +69,8 @@ Get-ExecutionPolicy -List
 
 Do this before **Update**, so the updates don't spend time upgrading apps that are about to be removed.
 
+Some Start menu entries on a fresh install (LinkedIn, WhatsApp and similar) are placeholder pins: the app only downloads when clicked, so there's nothing to uninstall yet. Right-click those and choose **Unpin from Start**.
+
 {% include remove.md %}
 
 ## Update
