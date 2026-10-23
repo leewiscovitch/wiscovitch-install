@@ -348,6 +348,14 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 
 The last line is **Settings → Personalization → Start → Show account-related notifications**; it takes effect when Explorer restarts (below).
 
+**No "Learn about this picture" icon** on the desktop when the wallpaper is **Windows Spotlight** (the daily Bing pictures). The pictures keep changing; only the icon goes:
+
+```powershell
+$p = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel"
+if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
+Set-ItemProperty -Path $p -Name "{2cc5ca98-6485-489a-920e-b3e88a6ccce3}" -Type DWord -Value 1   # hide "Learn about this picture"
+```
+
 **Microsoft Edge:** skip the first-run setup (no welcome pages, no sign-in prompt, no importing other browsers' data) and hide the Copilot button and the sidebar. These are machine-wide Edge policies, so Edge will say "Your browser is managed by your organization"; `edge://policy` lists them. They apply the next time Edge starts:
 
 ```powershell
