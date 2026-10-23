@@ -61,8 +61,11 @@ foreach ($f in Get-ChildItem -Path $Dir -Filter *.powershell | Sort-Object Name)
         [void]$sb.AppendLine('function Read-Host { param($Prompt) ' + $answers + '[$Prompt] }')
     }
     foreach ($st in $ast.EndBlock.Statements) {
-        [void]$sb.AppendLine('$global:LASTEXITCODE = 0')
+        [void]$sb.AppendLine('$global:LASTEXITCODE = 0; $errBefore = $Error.Count')
         [void]$sb.AppendLine($st.Extent.Text)
+        # A statement that succeeded overall handled its own errors (a retry loop's
+        # try/catch, or a module's SilentlyContinue), so those don't count
+        [void]$sb.AppendLine('if ($?) { while ($Error.Count -gt $errBefore) { $Error.RemoveAt(0) } }')
         $label = ($st.Extent.Text -split "`n")[0].Trim().Replace("'", "''")
         [void]$sb.AppendLine("if (`$LASTEXITCODE -and `$okCodes -notcontains `$LASTEXITCODE) { `$nativeFailures += 'exit ' + `$LASTEXITCODE + ' from: $label' }")
     }

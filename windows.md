@@ -83,13 +83,15 @@ Add-WUServiceManager -MicrosoftUpdate -Confirm:$false
 (Get-Module PSWindowsUpdate).Version.ToString()   # {{ site.ps_modules.PSWindowsUpdate.version }}
 ```
 
-The last line turns on Microsoft Update (the same as **Settings → Windows Update → Advanced options → Receive updates for other Microsoft products**), so `-MicrosoftUpdate` below doesn't have to register it on the fly. If a `Get-WindowsUpdate` command still fails with "Value does not fall within the expected range", wait a minute and run it again: Windows Update can still be starting up right after boot.
+The last line turns on Microsoft Update (the same as **Settings → Windows Update → Advanced options → Receive updates for other Microsoft products**), so `-MicrosoftUpdate` below doesn't have to register it on the fly.
+
+Right after boot, Windows Update can still be starting up, and `Get-WindowsUpdate` then fails with "Value does not fall within the expected range". The commands below retry up to four times, 30 seconds apart, and print "Windows Update isn't ready" while they wait.
 
 Install all Windows updates, including drivers and other Microsoft products, rebooting automatically if needed. Run it again after each reboot until it finds nothing. The first line starts the Windows Update service, which stops itself when idle and can't be started while it's still stopping (common right after first boot):
 
 ```powershell
 while ((Get-Service wuauserv).Status -eq 'StopPending') { Start-Sleep 2 }; Start-Service wuauserv
-Get-WindowsUpdate -MicrosoftUpdate -Install -AcceptAll -AutoReboot
+foreach ($try in 1..4) { try { Get-WindowsUpdate -MicrosoftUpdate -Install -AcceptAll -AutoReboot -ErrorAction Stop; break } catch { if ($try -eq 4) { throw }; "Windows Update isn't ready ($($_.Exception.Message)); retrying in 30 seconds"; Start-Sleep 30 } }
 UsoClient StartInteractiveScan
 ```
 
@@ -99,7 +101,7 @@ To see what's pending without installing anything:
 
 ```powershell
 while ((Get-Service wuauserv).Status -eq 'StopPending') { Start-Sleep 2 }; Start-Service wuauserv
-Get-WindowsUpdate -MicrosoftUpdate
+foreach ($try in 1..4) { try { Get-WindowsUpdate -MicrosoftUpdate -ErrorAction Stop; break } catch { if ($try -eq 4) { throw }; "Windows Update isn't ready ($($_.Exception.Message)); retrying in 30 seconds"; Start-Sleep 30 } }
 ```
 
 `Get-WUHistory -Last 30` lists what was installed (times are in UTC).
