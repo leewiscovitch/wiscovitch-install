@@ -8,16 +8,16 @@ parent_title: Home
 
 A key has two halves:
 
-- **Private key** (`id_ed25519`): stays on the machine you connect **from**. Never copy it anywhere.
-- **Public key** (`id_ed25519.pub`): goes on every machine you connect **to**. It's safe to share.
+- **Private key** (`id_ed25519`{:.path}): stays on the machine you connect **from**. Never copy it anywhere.
+- **Public key** (`id_ed25519.pub`{:.path}): goes on every machine you connect **to**. It's safe to share.
 
-The machines you log in to trust the public keys listed at [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys). To let a new machine log in everywhere, add its public key to GitHub; to let a machine accept your keys, run the **Configure** step on its OS page. Commands use `<HOST>` for the machine you're connecting to.
+The machines you log in to trust the public keys listed at [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys). To let a new machine log in everywhere, add its public key to GitHub; to let a machine accept your keys, run the **Configure** step on its OS page. Commands use `<HOST>`{:.user} for the machine you're connecting to.
 
 ### How github.com/&lt;user&gt;.keys works
 
 Every GitHub account has this address. It returns the account's public SSH keys as plain text, one per line, with no login needed:
 
-- **What's listed:** the keys under [GitHub → Settings → SSH and GPG keys](https://github.com/settings/keys) added as *authentication* keys (the ones `git push` over SSH uses). Keys added only for commit signing aren't listed. `github.com/<user>.gpg` does the same for GPG keys.
+- **What's listed:** the keys under [GitHub → Settings → SSH and GPG keys](https://github.com/settings/keys) added as *authentication* keys (the ones `git push`{:.cmd} over SSH uses). Keys added only for commit signing aren't listed. `github.com/<user>.gpg`{:.path} does the same for GPG keys.
 - **Why it's safe to publish:** a public key only lets a server check that you hold the matching private key; it can't log in by itself. The private key never leaves your machine.
 - **It's copied once, not live.** The **Configure** step downloads the list at that moment. A key added to GitHub later doesn't reach machines that are already set up, and a key deleted from GitHub keeps working on them until you refresh their list ([Accept keys](#accept-keys) below). If a machine with a private key is lost, delete its key from GitHub *and* refresh every machine.
 - **Your GitHub account is the trust point.** Anyone who could add a key to it before you set up a machine would get SSH access to that machine, so keep two-factor authentication on for GitHub.
@@ -50,7 +50,7 @@ Get-Content "$HOME\.ssh\id_ed25519.pub"
 
 ## Publish the key
 
-Add the public key to GitHub so every machine that trusts [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys) accepts it. Either paste it at [GitHub → Settings → SSH keys → New SSH key](https://github.com/settings/ssh/new), or use the GitHub CLI. The first command grants `gh` permission to manage keys (once per machine):
+Add the public key to GitHub so every machine that trusts [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys) accepts it. Either paste it at [GitHub → Settings → SSH keys → New SSH key](https://github.com/settings/ssh/new), or use the GitHub CLI. The first command grants `gh`{:.cmd} permission to manage keys (once per machine):
 
 ```bash
 gh auth refresh -h github.com -s admin:public_key
@@ -62,7 +62,7 @@ gh auth refresh -h github.com -s admin:public_key
 gh ssh-key add "$HOME\.ssh\id_ed25519.pub" --title $env:COMPUTERNAME
 ```
 
-The key also works for `git` over SSH to GitHub.
+The key also works for `git`{:.cmd} over SSH to GitHub.
 
 ## Accept keys
 
@@ -96,7 +96,7 @@ From Linux to a Linux machine:
 ssh-copy-id {{ site.user }}@<HOST>
 ```
 
-From Windows to a Linux machine (Windows has no `ssh-copy-id`):
+From Windows to a Linux machine (Windows has no `ssh-copy-id`{:.cmd}):
 
 ```powershell
 Get-Content "$HOME\.ssh\id_ed25519.pub" | ssh {{ site.user }}@<HOST> "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
@@ -118,7 +118,7 @@ Log in from the machine that has the private key. It should connect without aski
 ssh {{ site.user }}@<HOST>
 ```
 
-If it still asks for a password, run with `-v` and look for `Offering public key` and the server's reply. Common causes: wrong permissions on `~/.ssh` or `authorized_keys` (Linux), the key in `~\.ssh\authorized_keys` instead of `administrators_authorized_keys` (Windows admin accounts), or a firewall blocking port 22.
+If it still asks for a password, run with `-v`{:.cmd} and look for `Offering public key`{:.val} and the server's reply. Common causes: wrong permissions on `~/.ssh`{:.path} or `authorized_keys`{:.path} (Linux), the key in `~\.ssh\authorized_keys`{:.path} instead of `administrators_authorized_keys`{:.path} (Windows admin accounts), or a firewall blocking port 22.
 
 ```bash
 ssh -v {{ site.user }}@<HOST>
@@ -128,7 +128,7 @@ ssh -v {{ site.user }}@<HOST>
 
 Password logins stay enabled: nothing on this site turns them off unless you run the steps below. Once key logins work, you can disable passwords so only keys are accepted. Keep one SSH session open while you do this, so a mistake can't lock you out.
 
-Linux (the service is `ssh` on Ubuntu and `sshd` elsewhere; the reload line tries both):
+Linux (the service is `ssh`{:.cmd} on Ubuntu and `sshd`{:.cmd} elsewhere; the reload line tries both):
 
 ```bash
 echo 'PasswordAuthentication no' | sudo tee /etc/ssh/sshd_config.d/01-no-passwords.conf > /dev/null
@@ -137,7 +137,7 @@ sudo sshd -t &&\
 sudo sshd -T | grep -i '^passwordauthentication'
 ```
 
-The last line should print `passwordauthentication no`.
+The last line should print `passwordauthentication no`{:.val}.
 
 Windows (elevated PowerShell):
 
@@ -148,7 +148,7 @@ Restart-Service sshd
 Select-String -Path $cfg -Pattern '^PasswordAuthentication'
 ```
 
-The last line should show `PasswordAuthentication no`.
+The last line should show `PasswordAuthentication no`{:.val}.
 
 To turn passwords back on, Linux:
 

@@ -1,7 +1,7 @@
 {%- assign pm = site.data.pm[page.pm] -%}
 ### Claude Code as a service
 
-Keeps [Claude Code](https://code.claude.com/docs) running as `{{ site.user }}` from boot (nobody needs to sign in) and reachable from the Claude desktop app, claude.ai/code and the phone app through **Remote Control**. Claude runs inside a detached `tmux` session, because it needs a terminal that systemd doesn't provide, so you can also attach to it over SSH. Each service has its own tmux server (`tmux -L <service>`), so the two never interfere. Each service works in its own folder under `/opt/claude/`: Claude never remembers folder trust for a home folder, and keeps conversation history per folder. Tested on Ubuntu Desktop 26.04.
+Keeps [Claude Code](https://code.claude.com/docs) running as `{{ site.user }}` from boot (nobody needs to sign in) and reachable from the Claude desktop app, claude.ai/code and the phone app through **Remote Control**. Claude runs inside a detached `tmux` session, because it needs a terminal that systemd doesn't provide, so you can also attach to it over SSH. Each service has its own tmux server (`tmux -L <service>`), so the two never interfere. The units start tmux through `/bin/sh`, because SELinux (on by default on Fedora, AlmaLinux and Rocky) doesn't let systemd start tmux directly. Each service works in its own folder under `/opt/claude/`: Claude never remembers folder trust for a home folder, and keeps conversation history per folder. Tested on Ubuntu Desktop 26.04.
 
 There are two services. Pick either, or run both side by side:
 
@@ -53,8 +53,8 @@ User={{ site.user }}
 WorkingDirectory=/opt/claude/$n
 Environment=HOME=$HOME
 Environment=PATH=$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ExecStart=/usr/bin/tmux -L claude-session new-session -d -s claude-session -c /opt/claude/$n "while true; do claude --continue --remote-control $n || claude --remote-control $n; sleep 5; done"
-ExecStop=/usr/bin/tmux -L claude-session kill-server
+ExecStart=/bin/sh -c 'exec tmux -L claude-session new-session -d -s claude-session -c /opt/claude/$n "while true; do claude --continue --remote-control $n || claude --remote-control $n; sleep 5; done"'
+ExecStop=/bin/sh -c 'exec tmux -L claude-session kill-server'
 Restart=always
 RestartSec=10
 
@@ -81,8 +81,8 @@ User={{ site.user }}
 WorkingDirectory=/opt/claude/homelab
 Environment=HOME=$HOME
 Environment=PATH=$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ExecStart=/usr/bin/tmux -L claude-server new-session -d -s claude-server -c /opt/claude/homelab "while true; do claude remote-control --name $n --spawn same-dir --capacity 4 --permission-mode auto; sleep 5; done"
-ExecStop=/usr/bin/tmux -L claude-server kill-server
+ExecStart=/bin/sh -c 'exec tmux -L claude-server new-session -d -s claude-server -c /opt/claude/homelab "while true; do claude remote-control --name $n --spawn same-dir --capacity 4 --permission-mode auto; sleep 5; done"'
+ExecStop=/bin/sh -c 'exec tmux -L claude-server kill-server'
 Restart=always
 RestartSec=10
 
