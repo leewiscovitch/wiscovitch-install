@@ -50,7 +50,19 @@ bash
 
 ## Optional
 
-_No steps yet._
+### Server use: always on, lid closed
+
+For a laptop that runs as a server on constant power: it keeps running with the lid closed (also through reboots), and Wi-Fi stays fully awake.
+
+{% include server-power.md part="lid" %}
+
+Idle sleep on CachyOS's default KDE Plasma desktop is set in **System Settings → Power Management**: on **AC Power**, set **When inactive** to **Do nothing**; on **Battery**, **Sleep** after **30 min**. The login screen (SDDM) doesn't suspend on its own.
+
+{% include server-power.md part="wifi" %}
+
+{% include server-power.md part="check" wifi="yes" %}
+
+{% include server-power.md part="bios" %}
 
 ## Verify
 

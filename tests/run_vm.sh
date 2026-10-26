@@ -32,6 +32,8 @@ scp -q "${SSH_OPTS[@]}" -r "$dir" "tech@$ip:/tmp/blocks"
 for f in "$dir"/*.bash; do
     name=$(basename "$f" .bash)
     if grep -qx 'bash' "$f"; then add "$name" skip "starts an interactive shell"; continue; fi
+    # GNOME idle-sleep steps need a desktop; the cloud templates have none
+    if grep -q 'dconf update' "$f" && ! S 'command -v dconf' >/dev/null 2>&1; then add "$name" skip "no GNOME desktop (dconf) on this VM"; continue; fi
     # Answer prompts like a person would: test values for read -p, "y" for anything else
     if grep -q 'read -rp' "$f"; then
         S "cd ~ && printf 'CI Test\nci@example.com\n' | bash /tmp/blocks/$name.bash" > "$dir/$name.log" 2>&1
@@ -60,4 +62,10 @@ check github-keys  "GitHub keys in authorized_keys"              'test "$(curl -
 check ssh-config   "ssh client config: accept-new"               'ssh -G example.com | grep -qx "stricthostkeychecking accept-new"'
 check git-identity "git name/email from the prompts"             'test "$(git config --global user.name)" = "CI Test" && test "$(git config --global user.email)" = ci@example.com'
 check packages     "page packages installed (git, micro, htop)"  'command -v git && command -v micro && command -v htop'
+if grep -qs 'HandleLidSwitch=ignore' "$dir"/*.bash; then   # the page's Optional server-use section
+    check lid-ignore "logind ignores the lid (battery and AC)" 'busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager HandleLidSwitch HandleLidSwitchExternalPower | grep -c "\"ignore\"" | grep -qx 2'
+fi
+if grep -qs 'wifi.powersave = 2' "$dir"/*.bash; then
+    check wifi-powersave "NetworkManager Wi-Fi power save off" 'NetworkManager --print-config | grep -qx "wifi.powersave=2"'
+fi
 exit 0

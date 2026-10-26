@@ -40,7 +40,17 @@ Run as a user with `sudo` rights.
 
 ## Optional
 
-_No steps yet._
+### Server use: always on, lid closed
+
+For a laptop running Ubuntu Server on constant power: it keeps running with the lid closed, also through reboots. Ubuntu Server has no desktop, so it never sleeps on idle.
+
+{% include server-power.md part="lid" %}
+
+Wi-Fi on Ubuntu Server is configured with netplan, not NetworkManager, so the Wi-Fi power-save file from the desktop pages doesn't apply. A wired connection is the better choice for a server anyway.
+
+{% include server-power.md part="check" %}
+
+{% include server-power.md part="bios" %}
 
 ## Verify
 
