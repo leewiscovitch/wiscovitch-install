@@ -1,7 +1,7 @@
 {%- assign pm = site.data.pm[page.pm] -%}
 ### Claude Code as a service
 
-Keeps [Claude Code](https://code.claude.com/docs) running as `{{ site.user }}` from boot (nobody needs to sign in) and reachable from the Claude desktop app, claude.ai/code and the phone app through **Remote Control**. Claude runs inside a detached `tmux` session, because it needs a terminal that systemd doesn't provide, so you can also attach to it over SSH. Each service works in its own folder under `/opt/claude/`: Claude never remembers folder trust for a home folder, and keeps conversation history per folder. Tested on Ubuntu Desktop 26.04.
+Keeps [Claude Code](https://code.claude.com/docs) running as `{{ site.user }}` from boot (nobody needs to sign in) and reachable from the Claude desktop app, claude.ai/code and the phone app through **Remote Control**. Claude runs inside a detached `tmux` session, because it needs a terminal that systemd doesn't provide, so you can also attach to it over SSH. Each service has its own tmux server (`tmux -L <service>`), so the two never interfere. Each service works in its own folder under `/opt/claude/`: Claude never remembers folder trust for a home folder, and keeps conversation history per folder. Tested on Ubuntu Desktop 26.04.
 
 There are two services. Pick either, or run both side by side:
 
@@ -53,8 +53,8 @@ User={{ site.user }}
 WorkingDirectory=/opt/claude/$n
 Environment=HOME=$HOME
 Environment=PATH=$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ExecStart=/usr/bin/tmux new-session -d -s claude-session -c /opt/claude/$n "while true; do claude --continue --remote-control $n || claude --remote-control $n; sleep 5; done"
-ExecStop=/usr/bin/tmux kill-session -t claude-session
+ExecStart=/usr/bin/tmux -L claude-session new-session -d -s claude-session -c /opt/claude/$n "while true; do claude --continue --remote-control $n || claude --remote-control $n; sleep 5; done"
+ExecStop=/usr/bin/tmux -L claude-session kill-server
 Restart=always
 RestartSec=10
 
@@ -81,8 +81,8 @@ User={{ site.user }}
 WorkingDirectory=/opt/claude/homelab
 Environment=HOME=$HOME
 Environment=PATH=$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ExecStart=/usr/bin/tmux new-session -d -s claude-server -c /opt/claude/homelab "while true; do claude remote-control --name $n --spawn same-dir --capacity 4 --permission-mode auto; sleep 5; done"
-ExecStop=/usr/bin/tmux kill-session -t claude-server
+ExecStart=/usr/bin/tmux -L claude-server new-session -d -s claude-server -c /opt/claude/homelab "while true; do claude remote-control --name $n --spawn same-dir --capacity 4 --permission-mode auto; sleep 5; done"
+ExecStop=/usr/bin/tmux -L claude-server kill-server
 Restart=always
 RestartSec=10
 
@@ -100,7 +100,7 @@ sudo tee /etc/profile.d/claude-service.sh > /dev/null << 'EOF'
 for s in claude-session claude-server; do
   systemctl is-enabled --quiet $s 2>/dev/null || continue
   systemctl is-active --quiet $s || echo "$s.service is NOT running (systemctl status $s)"
-  echo "Claude Code $s: as {{ site.user }}, attach with \`tmux attach -t $s\`, detach with Ctrl+b then d."
+  echo "Claude Code $s: as {{ site.user }}, attach with \`tmux -L $s attach\`, detach with Ctrl+b then d."
 done
 EOF
 ```
@@ -109,11 +109,11 @@ Check whichever you set up:
 
 ```bash
 systemctl is-active claude-session claude-server   # active (one line per service)
-tmux capture-pane -p -t claude-session | grep -o 'rc active'   # rc active (Remote Control, in the status bar)
-tmux capture-pane -p -t claude-server | grep -o 'Connected · homelab'   # Connected · homelab
+tmux -L claude-session capture-pane -p | grep -o 'rc active'   # rc active (Remote Control, in the status bar)
+tmux -L claude-server capture-pane -p | grep -o 'Connected · homelab'   # Connected · homelab
 ```
 
-Inside a tmux session, don't use `/exit` (the loop just starts Claude again); detach instead. A one-time dialog (like a "try the new renderer" offer) can wait on screen after an update: attach and answer it. Sessions use the permission mode set for them (the session service: this account's setting); with passwordless sudo, a remote message can change the whole system, so choose the mode deliberately.
+To attach: `tmux -L claude-session attach` or `tmux -L claude-server attach`; detach with Ctrl+b then d. Inside, don't use `/exit` (the loop just starts Claude again); detach instead. A one-time dialog (like a "try the new renderer" offer) can wait on screen after an update: attach and answer it. Sessions use the permission mode set for them (the session service: this account's setting); with passwordless sudo, a remote message can change the whole system, so choose the mode deliberately.
 
 **Optional: new sessions from the desktop app over SSH.** The desktop app's **New** button can't start sessions through either service. To start fresh ones from it, add this machine as an SSH environment in the app (**New → environment picker → + New environment**) with this host, user `{{ site.user }}`, a key the machine trusts (any key on your GitHub account, see [SSH keys]({{ '/ssh/' | relative_url }})), and a folder of its own:
 

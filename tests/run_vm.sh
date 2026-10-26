@@ -69,7 +69,7 @@ if grep -qs 'HandleLidSwitch=ignore' "$dir"/*.bash; then   # the page's Optional
 fi
 for svc in claude-session claude-server; do   # the page's Claude Code services (they run until signed in)
     if grep -qs "$svc.service" "$dir"/*.bash; then
-        check "$svc" "$svc.service enabled and running (tmux session)" "systemctl is-enabled $svc && systemctl is-active $svc && tmux has-session -t $svc"
+        check "$svc" "$svc.service enabled and running (tmux session)" "systemctl is-enabled $svc && systemctl is-active $svc && tmux -L $svc has-session -t $svc"
     fi
 done
 if grep -qs 'wifi.powersave = 2' "$dir"/*.bash; then
