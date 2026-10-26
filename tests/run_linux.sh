@@ -30,10 +30,14 @@ Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/b
 EOF
 chmod 0440 /etc/sudoers.d/00-ci
 
-for cmd in systemctl timedatectl gsettings chsh; do
+for cmd in systemctl timedatectl gsettings chsh dconf busctl NetworkManager; do
     printf '#!/bin/sh\necho "[stub] %s $*"\n' "$cmd" > "/usr/local/bin/$cmd"
     chmod +x "/usr/local/bin/$cmd"
 done
+# GDM's login-screen defaults file, as a desktop install has it (only its power section header)
+if command -v apt-get >/dev/null && [ ! -e /etc/gdm3/greeter.dconf-defaults ]; then
+    mkdir -p /etc/gdm3 && printf '[org/gnome/settings-daemon/plugins/power]\n' > /etc/gdm3/greeter.dconf-defaults
+fi
 
 for f in "$dir"/*.bash; do
     name=$(basename "$f" .bash)
