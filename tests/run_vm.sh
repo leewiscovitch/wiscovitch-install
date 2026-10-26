@@ -67,9 +67,11 @@ check packages     "page packages installed (git, micro, htop)"  'command -v git
 if grep -qs 'HandleLidSwitch=ignore' "$dir"/*.bash; then   # the page's Optional server-use section
     check lid-ignore "logind ignores the lid (battery and AC)" 'busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager HandleLidSwitch HandleLidSwitchExternalPower | grep -c "\"ignore\"" | grep -qx 2'
 fi
-if grep -qs 'claude.service' "$dir"/*.bash; then   # the page's Claude Code service (runs until signed in)
-    check claude-service "claude.service enabled and running (tmux session)" 'systemctl is-enabled claude && systemctl is-active claude && tmux has-session -t claude'
-fi
+for svc in claude-session claude-server; do   # the page's Claude Code services (they run until signed in)
+    if grep -qs "$svc.service" "$dir"/*.bash; then
+        check "$svc" "$svc.service enabled and running (tmux session)" "systemctl is-enabled $svc && systemctl is-active $svc && tmux has-session -t $svc"
+    fi
+done
 if grep -qs 'wifi.powersave = 2' "$dir"/*.bash; then
     check wifi-powersave "NetworkManager Wi-Fi power save off" 'sudo NetworkManager --print-config | grep -qx "wifi.powersave=2"'
 fi
