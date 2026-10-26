@@ -71,6 +71,6 @@ if grep -qs 'claude.service' "$dir"/*.bash; then   # the page's Claude Code serv
     check claude-service "claude.service enabled and running (tmux session)" 'systemctl is-enabled claude && systemctl is-active claude && tmux has-session -t claude'
 fi
 if grep -qs 'wifi.powersave = 2' "$dir"/*.bash; then
-    check wifi-powersave "NetworkManager Wi-Fi power save off" 'NetworkManager --print-config | grep -qx "wifi.powersave=2"'
+    check wifi-powersave "NetworkManager Wi-Fi power save off" 'sudo NetworkManager --print-config | grep -qx "wifi.powersave=2"'
 fi
 exit 0

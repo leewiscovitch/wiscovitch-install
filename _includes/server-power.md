@@ -37,7 +37,7 @@ Check (after a reboot):
 busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager HandleLidSwitch HandleLidSwitchExternalPower   # s "ignore" (twice)
 {% if include.idle == "gnome" %}dconf read /org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-type   # 'nothing'
 dconf read /org/gnome/settings-daemon/plugins/power/sleep-inactive-battery-timeout   # 1800
-{% endif %}{% if include.wifi %}NetworkManager --print-config | grep '^wifi.powersave'   # wifi.powersave=2
+{% endif %}{% if include.wifi %}sudo NetworkManager --print-config | grep '^wifi.powersave'   # wifi.powersave=2
 {% endif %}```
 {%- elsif include.part == "bios" -%}
 In the firmware setup (F10 at power-on on HP laptops), consider capping battery charging, which greatly extends battery life on permanent AC (HP: **Battery Health Manager → Maximize my battery health**), and turning on power-on when AC power returns after an outage, if the model offers it.
