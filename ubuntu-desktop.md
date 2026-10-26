@@ -102,7 +102,7 @@ Check (after a reboot):
 busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager HandleLidSwitch HandleLidSwitchExternalPower   # s "ignore" (twice)
 dconf read /org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-type   # 'nothing'
 dconf read /org/gnome/settings-daemon/plugins/power/sleep-inactive-battery-timeout   # 1800
-NetworkManager --print-config | grep wifi.powersave   # wifi.powersave=2
+NetworkManager --print-config | grep '^wifi.powersave'   # wifi.powersave=2
 ```
 
 Wi-Fi reconnects at boot without anyone signing in only if its saved password is available to all users, which is the default for networks joined in Settings. With both Ethernet and Wi-Fi connected, NetworkManager prefers Ethernet automatically and keeps Wi-Fi as a fallback.
