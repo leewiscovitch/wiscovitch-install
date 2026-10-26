@@ -70,4 +70,12 @@ systemctl is-active claude   # active
 tmux capture-pane -p -t claude | grep -o 'rc active'   # rc active (Remote Control, in the status bar)
 ```
 
+**Optional: new sessions from the desktop app over SSH.** The service is one long-lived session that the app attaches to under **Remote Control**; the app can't start more sessions through it. To start fresh ones on this machine from **New**, add it as an SSH environment in the Claude desktop app (**New → environment picker → + New environment**) with this host, user `{{ site.user }}`, a key the machine trusts (any key on your GitHub account, see [SSH keys]({{ '/ssh/' | relative_url }})), and a folder of its own:
+
+```bash
+sudo install -d -o {{ site.user }} -g {{ site.user }} /opt/claude/work
+```
+
+Use `/opt/claude/work` (or any folder other than the service's): after a restart the service reopens the most recent conversation **in its folder**, so sessions started there would be picked up instead of its own. SSH sessions use the desktop computer's plugins (without their hooks) and end when you close them; the service keeps running alongside.
+
 Inside the session, don't use `/exit` (the loop just starts Claude again); detach instead. A one-time dialog (like a "try the new renderer" offer) can wait on screen after an update: attach and answer it. The session uses this account's permission mode; with passwordless sudo, a remote message can change the whole system, so consider keeping the mode on asking.

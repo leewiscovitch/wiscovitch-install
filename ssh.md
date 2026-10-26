@@ -80,6 +80,12 @@ On Windows (elevated PowerShell):
 Invoke-RestMethod https://github.com/{{ site.github_user }}.keys | Set-Content -Path "$env:ProgramData\ssh\administrators_authorized_keys"
 ```
 
+To only **add** keys that are new on GitHub and keep everything else in the file (keys added by hand, like one for a tool or an automation), on Linux:
+
+```bash
+curl -fsSL https://github.com/{{ site.github_user }}.keys | grep -vxFf ~/.ssh/authorized_keys >> ~/.ssh/authorized_keys
+```
+
 ## Copy a key directly
 
 Without GitHub, copy a public key straight to one machine. It asks for that machine's password once.
