@@ -12,7 +12,7 @@ packages:
 
 ## Before you start
 
-Run as a user with `sudo`{:.cmd} rights.
+Run as a user with `sudo`{:.sudo} rights.
 
 CachyOS defaults to `fish`{:.cmd}, but these steps use `bash`{:.cmd} syntax. Make `bash`{:.cmd} the login shell (asks for your password):
 

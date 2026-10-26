@@ -305,7 +305,7 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" 
 
 Search still works from the Start menu: open Start and type.
 
-**Developer settings** (Settings → System → Advanced): Developer Mode, long file paths (beyond 260 characters), `sudo`{:.cmd} in inline mode (runs in the same window, like Linux; elevate with `sudo <command>`{:.cmd}), and Windows Terminal as the default terminal for console apps:
+**Developer settings** (Settings → System → Advanced): Developer Mode, long file paths (beyond 260 characters), `sudo`{:.sudo} in inline mode (runs in the same window, like Linux; elevate with `sudo <command>`{:.sudo}), and Windows Terminal as the default terminal for console apps:
 
 ```powershell
 $dev = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
@@ -321,7 +321,7 @@ Set-ItemProperty -Path $con -Name DelegationConsole -Value "{2EACA947-7F5F-4CFA-
 Set-ItemProperty -Path $con -Name DelegationTerminal -Value "{E12CFF52-A866-4C77-9A90-F570A7AA2C6B}"   # Windows Terminal
 ```
 
-Long paths take effect for apps started after a restart. `sudo`{:.cmd} needs Windows 11 24H2 or newer.
+Long paths take effect for apps started after a restart. `sudo`{:.sudo} needs Windows 11 24H2 or newer.
 
 **No welcome screens or suggestions** after updates: turns off the three switches under **Settings → System → Notifications → Additional settings** (the "what's new" welcome experience, "finish setting up this device", and tips and suggestions):
 

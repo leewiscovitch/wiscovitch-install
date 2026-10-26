@@ -14,7 +14,7 @@ packages:
 
 ## Before you start
 
-Run as a user with `sudo`{:.cmd} rights.
+Run as a user with `sudo`{:.sudo} rights.
 
 {% include sudoers.md %}
 

@@ -16,6 +16,7 @@
       --hl-string: #0a3069; --hl-var: #953800; --hl-comment: #6e7781;
       /* Inline code kinds ({:.cmd} etc.): >= 4.5:1 on --inline-bg; cmd/user kept apart for red-green colour blindness */
       --code-cmd: #c2410c; --code-user: #0f766e; --code-path: #0550ae; --code-val: #7a3fc9;
+      --code-sudo: #d00000;   /* sudo, bold, in prose and code blocks: stronger than the keyword red */
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -25,6 +26,7 @@
         --hl-keyword: #ff7b72; --hl-command: #d2a8ff; --hl-flag: #79c0ff;
         --hl-string: #a5d6ff; --hl-var: #ffa657; --hl-comment: #8b949e;
         --code-cmd: #ffa657; --code-user: #3fd6a7; --code-path: #79c0ff; --code-val: #d2a8ff;
+        --code-sudo: #ff5c5c;
       }
     }
     * { box-sizing: border-box; }
@@ -59,6 +61,8 @@
     :not(pre) > code.user { color: var(--code-user); }  /* users and hosts: tech, root, wiscopronode1 */
     :not(pre) > code.path { color: var(--code-path); }  /* paths and files: /opt/claude, ~/.ssh/config */
     :not(pre) > code.val { color: var(--code-val); }    /* values and settings: ignore, 1800, Bypass */
+    /* sudo stands out everywhere: inline ({:.sudo}) and in code blocks (marked by the script below) */
+    :not(pre) > code.sudo, .highlight span.sudo { color: var(--code-sudo); font-weight: 700; }
     pre {
       background: var(--code-bg); border: 1px solid var(--border);
       border-radius: 6px; padding: 14px 16px; padding-right: 72px; overflow-x: auto;
@@ -151,6 +155,11 @@
           return;
         }
       });
+    });
+
+    // Make sudo stand out in every code block (Rouge or the script above already wraps it)
+    document.querySelectorAll('pre code span').forEach(function (s) {
+      if (s.textContent.trim() === 'sudo') s.classList.add('sudo');
     });
 
     // Add a Copy button to every code block

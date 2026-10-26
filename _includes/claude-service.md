@@ -113,7 +113,7 @@ tmux -L claude-session capture-pane -p | grep -o 'rc active'   # rc active (Remo
 tmux -L claude-server capture-pane -p | grep -o 'Connected · homelab'   # Connected · homelab
 ```
 
-To attach: `tmux -L claude-session attach`{:.cmd} or `tmux -L claude-server attach`{:.cmd}; detach with Ctrl+b then d. Inside, don't use `/exit`{:.cmd} (the loop just starts Claude again); detach instead. A one-time dialog (like a "try the new renderer" offer) can wait on screen after an update: attach and answer it. Sessions use the permission mode set for them (the session service: this account's setting); with passwordless `sudo`{:.cmd}, a remote message can change the whole system, so choose the mode deliberately.
+To attach: `tmux -L claude-session attach`{:.cmd} or `tmux -L claude-server attach`{:.cmd}; detach with Ctrl+b then d. Inside, don't use `/exit`{:.cmd} (the loop just starts Claude again); detach instead. A one-time dialog (like a "try the new renderer" offer) can wait on screen after an update: attach and answer it. Sessions use the permission mode set for them (the session service: this account's setting); with passwordless `sudo`{:.sudo}, a remote message can change the whole system, so choose the mode deliberately.
 
 **Optional: new sessions from the desktop app over SSH.** The desktop app's **New** button can't start sessions through either service. To start fresh ones from it, add this machine as an SSH environment in the app (**New → environment picker → + New environment**) with this host, user `{{ site.user }}`{:.user}, a key the machine trusts (any key on your GitHub account, see [SSH keys]({{ '/ssh/' | relative_url }})), and a folder of its own:
 

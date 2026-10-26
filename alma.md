@@ -15,7 +15,7 @@ packages:
 
 ## Before you start
 
-Run as a user with `sudo`{:.cmd} rights. Same steps for AlmaLinux and Rocky Linux, versions 9 and 10.
+Run as a user with `sudo`{:.sudo} rights. Same steps for AlmaLinux and Rocky Linux, versions 9 and 10.
 
 {% include sudoers.md %}
 

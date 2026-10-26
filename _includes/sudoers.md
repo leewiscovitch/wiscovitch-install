@@ -1,4 +1,4 @@
-Let `{{ site.user }}`{:.user} use `sudo`{:.cmd} without a password. The last two lines set the permissions `sudo`{:.cmd} expects and check the file's syntax, since a broken `sudoers`{:.path} file locks you out of `sudo`{:.cmd}:
+Let `{{ site.user }}`{:.user} use `sudo`{:.sudo} without a password. The last two lines set the permissions `sudo`{:.sudo} expects and check the file's syntax, since a broken `sudoers`{:.path} file locks you out of `sudo`{:.sudo}:
 
 ```bash
 sudo tee /etc/sudoers.d/{{ site.user }} > /dev/null << 'EOF'
