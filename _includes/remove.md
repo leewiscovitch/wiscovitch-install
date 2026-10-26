@@ -28,4 +28,4 @@ To find other apps, list the ones installed for you:
 Get-AppxPackage | Where-Object { -not $_.IsFramework -and $_.SignatureKind -eq 'Store' } | Sort-Object Name | Format-Table Name, Version
 ```
 
-Then remove one by putting its name in the `$apps` list of a block above, e.g. `'Microsoft.Paint'`.
+Then remove one by putting its name in the `$apps`{:.val} list of a block above, e.g. `'Microsoft.Paint'`{:.val}.

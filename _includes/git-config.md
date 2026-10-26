@@ -1,5 +1,5 @@
 {%- assign pm = site.data.pm[page.pm] -%}
-Set git identity. It asks for your name and email, then sets them:
+Set `git`{:.cmd} identity. It asks for your name and email, then sets them:
 
 {% if pm.lang == "powershell" -%}
 ```powershell

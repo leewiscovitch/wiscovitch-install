@@ -19,7 +19,7 @@ EOF
 sudo systemctl reload systemd-logind
 ```
 {%- elsif include.part == "wifi" -%}
-Wi-Fi power saving off (it delays replies and can drop idle connections). NetworkManager reads its config files in alphabetical order and the last setting wins, so the file name has to sort after any distro default (Ubuntu ships `default-wifi-powersave-on.conf`). It applies from the next reboot:
+Wi-Fi power saving off (it delays replies and can drop idle connections). `NetworkManager`{:.cmd} reads its config files in alphabetical order and the last setting wins, so the file name has to sort after any distro default (Ubuntu ships `default-wifi-powersave-on.conf`{:.path}). It applies from the next reboot:
 
 ```bash
 sudo mkdir -p /etc/NetworkManager/conf.d
@@ -29,7 +29,7 @@ wifi.powersave = 2
 EOF
 ```
 
-Wi-Fi reconnects at boot without anyone signing in only if its saved password is available to all users (the default for networks added in the desktop's settings or with `nmcli`). With both Ethernet and Wi-Fi connected, NetworkManager prefers Ethernet and keeps Wi-Fi as a fallback.
+Wi-Fi reconnects at boot without anyone signing in only if its saved password is available to all users (the default for networks added in the desktop's settings or with `nmcli`{:.cmd}). With both Ethernet and Wi-Fi connected, `NetworkManager`{:.cmd} prefers Ethernet and keeps Wi-Fi as a fallback.
 {%- elsif include.part == "check" -%}
 Check (after a reboot):
 

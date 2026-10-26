@@ -52,14 +52,14 @@ remove:
 
 Run everything in an elevated terminal: **Win+X → Terminal (Admin)**.
 
-Allow scripts and modules to run (needed for the Windows Update module below). `Bypass` turns off script checks for every user on this machine; it applies to Windows PowerShell; PowerShell 7 gets its own setting in the **PowerShell 7** section:
+Allow scripts and modules to run (needed for the Windows Update module below). `Bypass`{:.val} turns off script checks for every user on this machine; it applies to Windows PowerShell; PowerShell 7 gets its own setting in the **PowerShell 7** section:
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope LocalMachine -Force
 Get-ExecutionPolicy -List
 ```
 
-`LocalMachine` should show `Bypass`. If a `MachinePolicy` or `UserPolicy` row is set, Group Policy is overriding it.
+`LocalMachine`{:.val} should show `Bypass`{:.val}. If a `MachinePolicy`{:.val} or `UserPolicy`{:.val} row is set, Group Policy is overriding it.
 
 ## Time zone
 
@@ -75,7 +75,7 @@ Some Start menu entries on a fresh install (LinkedIn, WhatsApp and similar) are 
 
 ## Update
 
-Install the PSWindowsUpdate module (once per machine). It's downloaded straight from the PowerShell Gallery, pinned and checksum-checked like the MSIs below, so it doesn't need `Install-Module`, the NuGet provider or the Gallery's search:
+Install the `PSWindowsUpdate`{:.cmd} module (once per machine). It's downloaded straight from the PowerShell Gallery, pinned and checksum-checked like the MSIs below, so it doesn't need `Install-Module`{:.cmd}, the `NuGet`{:.cmd} provider or the Gallery's search:
 
 ```powershell
 {% include ps-module.md name="PSWindowsUpdate" %}
@@ -83,7 +83,7 @@ Import-Module PSWindowsUpdate
 (Get-Module PSWindowsUpdate).Version.ToString()   # {{ site.ps_modules.PSWindowsUpdate.version }}
 ```
 
-Right after the first sign-in, Windows installs drivers and updates on its own for a while, and `Get-WindowsUpdate` fails with "Value does not fall within the expected range" while that runs. The commands below keep trying every 30 seconds for up to 10 minutes and print "Windows Update is busy" while they wait. If they still give up, wait until **Settings → Windows Update** shows nothing downloading or installing, and run them again.
+Right after the first sign-in, Windows installs drivers and updates on its own for a while, and `Get-WindowsUpdate`{:.cmd} fails with "Value does not fall within the expected range" while that runs. The commands below keep trying every 30 seconds for up to 10 minutes and print "Windows Update is busy" while they wait. If they still give up, wait until **Settings → Windows Update** shows nothing downloading or installing, and run them again.
 
 Install all Windows updates, including drivers and other Microsoft products, rebooting automatically if needed. Run it again after each reboot until it finds nothing. The first line starts the Windows Update service, which stops itself when idle and can't be started while it's still stopping (common right after first boot):
 
@@ -102,7 +102,7 @@ while ((Get-Service wuauserv).Status -eq 'StopPending') { Start-Sleep 2 }; Start
 foreach ($try in 1..20) { try { Get-WindowsUpdate -MicrosoftUpdate -ErrorAction Stop; break } catch { if ($try -eq 20) { throw }; "Windows Update is busy (usually installing updates on its own); trying again in 30 seconds ($try of 20)"; Start-Sleep 30 } }
 ```
 
-`Get-WUHistory -Last 30` lists what was installed (times are in UTC).
+`Get-WUHistory -Last 30`{:.cmd} lists what was installed (times are in UTC).
 
 **Update for Windows Security platform (KB5007651)** can show up again on every run, even though each run reports it as installed. Once it's the only thing left, Windows is up to date; it stops appearing after the Security app updates itself through the Store.
 
@@ -114,13 +114,13 @@ Get-CimInstance -Namespace "Root\cimv2\mdm\dmmap" -ClassName "MDM_EnterpriseMode
 
 {% include update.md %}
 
-The command runs twice on purpose. A fresh install ships an older `winget`, and when `winget upgrade --all` updates winget itself it prints "Restart the application to complete the upgrade", then stops with "Cancelled"; the second run, with the new winget, upgrades the rest. If nothing needed updating, the second run just says so. Afterwards `winget --version` shows v{{ site.winget_version }} or newer.
+The command runs twice on purpose. A fresh install ships an older `winget`{:.cmd}, and when `winget upgrade --all`{:.cmd} updates `winget`{:.cmd} itself it prints "Restart the application to complete the upgrade", then stops with "Cancelled"; the second run, with the new `winget`{:.cmd}, upgrades the rest. If nothing needed updating, the second run just says so. Afterwards `winget --version`{:.cmd} shows v{{ site.winget_version }} or newer.
 
 ## Install
 
 {% include install.md %}
 
-**Over SSH (no desktop session):** the `winget` command, and the PowerShell module's usual mode, only work in a desktop session, so the block above fails when run over SSH. This installs the same packages from an SSH session: PowerShell 7 from its MSI, then Microsoft's WinGet PowerShell module, which runs the installs as SYSTEM through a one-off scheduled task. Store (MSIX) apps such as Windows Terminal can't be installed this way, but Windows 11 already includes Terminal.
+**Over SSH (no desktop session):** the `winget`{:.cmd} command, and the PowerShell module's usual mode, only work in a desktop session, so the block above fails when run over SSH. This installs the same packages from an SSH session: PowerShell 7 from its MSI, then Microsoft's WinGet PowerShell module, which runs the installs as SYSTEM through a one-off scheduled task. Store (MSIX) apps such as Windows Terminal can't be installed this way, but Windows 11 already includes Terminal.
 
 ```powershell
 $pwsh = "$env:ProgramFiles\PowerShell\7\pwsh.exe"
@@ -144,7 +144,7 @@ Get-Content $log
 
 ## PowerShell 7
 
-Install the latest stable PowerShell 7. Run the same command later to update it (winget upgrades it if it's already installed; `winget upgrade --all` also keeps it current). Run it from Windows PowerShell rather than from PowerShell 7 itself, so the installer isn't replacing the shell it's running in:
+Install the latest stable PowerShell 7. Run the same command later to update it (`winget`{:.cmd} upgrades it if it's already installed; `winget upgrade --all`{:.cmd} also keeps it current). Run it from Windows PowerShell rather than from PowerShell 7 itself, so the installer isn't replacing the shell it's running in:
 
 ```powershell
 if (Test-Path "$env:ProgramFiles\PowerShell\7\pwsh.exe") {
@@ -154,11 +154,11 @@ if (Test-Path "$env:ProgramFiles\PowerShell\7\pwsh.exe") {
 }
 ```
 
-If PowerShell 7 is already installed (by the **Over SSH** block, or updated by Windows Update), this only upgrades it. "No available upgrade found" means it's already current: Windows Update can install a new release before winget's catalog has it, and winget would otherwise try to install the older version over it, which fails.
+If PowerShell 7 is already installed (by the **Over SSH** block, or updated by Windows Update), this only upgrades it. "No available upgrade found" means it's already current: Windows Update can install a new release before `winget`{:.cmd}'s catalog has it, and `winget`{:.cmd} would otherwise try to install the older version over it, which fails.
 
-`--installer-type wix` picks the classic MSI, which installs to `C:\Program Files\PowerShell\7`. Without it, winget now defaults to the MSIX package, which lands in a versioned WindowsApps folder that the SSH step below can't point to. If an MSIX or Store copy is already installed, both can coexist.
+`--installer-type wix`{:.cmd} picks the classic MSI, which installs to `C:\Program Files\PowerShell\7`{:.path}. Without it, `winget`{:.cmd} now defaults to the MSIX package, which lands in a versioned WindowsApps folder that the SSH step below can't point to. If an MSIX or Store copy is already installed, both can coexist.
 
-Allow scripts in PowerShell 7 too; it keeps its own execution policy, separate from Windows PowerShell. `Set-ExecutionPolicy` in PowerShell 7 saves it in a file in the install folder, which every PowerShell update replaces, so set it as a machine policy in the registry instead. That survives updates and shows as the `MachinePolicy` row:
+Allow scripts in PowerShell 7 too; it keeps its own execution policy, separate from Windows PowerShell. `Set-ExecutionPolicy`{:.cmd} in PowerShell 7 saves it in a file in the install folder, which every PowerShell update replaces, so set it as a machine policy in the registry instead. That survives updates and shows as the `MachinePolicy`{:.val} row:
 
 ```powershell
 $p = "HKLM:\SOFTWARE\Policies\Microsoft\PowerShellCore"
@@ -187,9 +187,9 @@ if ($json -match '"defaultProfile"\s*:') {
 Select-String -Path $wt -Pattern '"defaultProfile"'
 ```
 
-It replaces an existing `defaultProfile`, or adds one if the file has none. If Terminal has never been opened, or the file is empty or damaged (for example after a crash), it saves any old file as `settings.json.bak` and writes one with just the default profile; Terminal fills in the rest on first launch. Close and reopen Terminal; the PowerShell 7 profile appears once Terminal detects the new install.
+It replaces an existing `defaultProfile`{:.val}, or adds one if the file has none. If Terminal has never been opened, or the file is empty or damaged (for example after a crash), it saves any old file as `settings.json.bak`{:.path} and writes one with just the default profile; Terminal fills in the rest on first launch. Close and reopen Terminal; the PowerShell 7 profile appears once Terminal detects the new install.
 
-Make PowerShell 7 the shell for incoming SSH sessions (the default is `cmd.exe`):
+Make PowerShell 7 the shell for incoming SSH sessions (the default is `cmd.exe`{:.cmd}):
 
 ```powershell
 $pwsh = "$env:ProgramFiles\PowerShell\7\pwsh.exe"
@@ -202,7 +202,7 @@ if (Test-Path $pwsh) {
 }
 ```
 
-The check matters: if `DefaultShell` points at a file that doesn't exist, sshd refuses every login. To undo the setting: `Remove-ItemProperty -Path HKLM:\SOFTWARE\OpenSSH -Name DefaultShell`.
+The check matters: if `DefaultShell`{:.val} points at a file that doesn't exist, `sshd`{:.cmd} refuses every login. To undo the setting: `Remove-ItemProperty -Path HKLM:\SOFTWARE\OpenSSH -Name DefaultShell`{:.cmd}.
 
 Check the version from a new Terminal tab:
 
@@ -212,7 +212,7 @@ $PSVersionTable.PSVersion   # {{ site.pwsh_msi.version }} or newer
 
 ## Settings
 
-Run in the elevated terminal as `{{ site.user }}`; `HKCU` settings apply to the signed-in user.
+Run in the elevated terminal as `{{ site.user }}`{:.user}; `HKCU`{:.path} settings apply to the signed-in user.
 
 **Dark theme** for apps and Windows:
 
@@ -242,7 +242,7 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power" -Name HiberbootEnabled -Type DWord -Value 0
 ```
 
-**Power timeouts.** Plugged in: screen off after 30 minutes, never sleep. On battery: screen off after 15 minutes, sleep after 30 (`0` means never):
+**Power timeouts.** Plugged in: screen off after 30 minutes, never sleep. On battery: screen off after 15 minutes, sleep after 30 (`0`{:.val} means never):
 
 ```powershell
 powercfg /change monitor-timeout-ac 30
@@ -252,7 +252,7 @@ powercfg /change monitor-timeout-dc 15
 powercfg /change standby-timeout-dc 30
 ```
 
-**Lid close** (laptops): do nothing when plugged in, sleep on battery. Uses GUIDs because the `LIDACTION` alias isn't available on every machine; values are 0 nothing, 1 sleep, 2 hibernate, 3 shut down:
+**Lid close** (laptops): do nothing when plugged in, sleep on battery. Uses GUIDs because the `LIDACTION`{:.val} alias isn't available on every machine; values are 0 nothing, 1 sleep, 2 hibernate, 3 shut down:
 
 ```powershell
 $buttons = "4f971e89-eebd-4455-a8de-9e59040e7347"
@@ -262,7 +262,7 @@ powercfg /setdcvalueindex SCHEME_CURRENT $buttons $lid 1
 powercfg /setactive SCHEME_CURRENT
 ```
 
-**Power mode: Best performance** (Settings → System → Power → Power mode). `powercfg` has no command for this, so it calls the Windows power API directly; it prints `0` on success:
+**Power mode: Best performance** (Settings → System → Power → Power mode). `powercfg`{:.cmd} has no command for this, so it calls the Windows power API directly; it prints `0`{:.val} on success:
 
 ```powershell
 if (-not ('Win.Power' -as [type])) { Add-Type -Namespace Win -Name Power -MemberDefinition '[DllImport("powrprof.dll")] public static extern uint PowerSetActiveOverlayScheme(Guid overlay);' }
@@ -277,7 +277,7 @@ powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE
 powercfg /query SCHEME_CURRENT 4f971e89-eebd-4455-a8de-9e59040e7347 5ca83367-6e45-459f-a27b-476b1d01c936
 ```
 
-**File Explorer and taskbar** (Settings → System → Advanced): show file extensions, hidden files and the full path in the title bar, and add **End task** to the taskbar's right-click menu. Protected system files such as `desktop.ini` stay hidden (they'd clutter the desktop), so the **Show hidden and system files** switch in Settings, which covers both, shows as off:
+**File Explorer and taskbar** (Settings → System → Advanced): show file extensions, hidden files and the full path in the title bar, and add **End task** to the taskbar's right-click menu. Protected system files such as `desktop.ini`{:.path} stay hidden (they'd clutter the desktop), so the **Show hidden and system files** switch in Settings, which covers both, shows as off:
 
 ```powershell
 $adv = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
@@ -305,7 +305,7 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" 
 
 Search still works from the Start menu: open Start and type.
 
-**Developer settings** (Settings → System → Advanced): Developer Mode, long file paths (beyond 260 characters), `sudo` in inline mode (runs in the same window, like Linux; elevate with `sudo <command>`), and Windows Terminal as the default terminal for console apps:
+**Developer settings** (Settings → System → Advanced): Developer Mode, long file paths (beyond 260 characters), `sudo`{:.cmd} in inline mode (runs in the same window, like Linux; elevate with `sudo <command>`{:.cmd}), and Windows Terminal as the default terminal for console apps:
 
 ```powershell
 $dev = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
@@ -321,7 +321,7 @@ Set-ItemProperty -Path $con -Name DelegationConsole -Value "{2EACA947-7F5F-4CFA-
 Set-ItemProperty -Path $con -Name DelegationTerminal -Value "{E12CFF52-A866-4C77-9A90-F570A7AA2C6B}"   # Windows Terminal
 ```
 
-Long paths take effect for apps started after a restart. `sudo` needs Windows 11 24H2 or newer.
+Long paths take effect for apps started after a restart. `sudo`{:.cmd} needs Windows 11 24H2 or newer.
 
 **No welcome screens or suggestions** after updates: turns off the three switches under **Settings → System → Notifications → Additional settings** (the "what's new" welcome experience, "finish setting up this device", and tips and suggestions):
 
@@ -354,7 +354,7 @@ if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
 Set-ItemProperty -Path $p -Name "{2cc5ca98-6485-489a-920e-b3e88a6ccce3}" -Type DWord -Value 1   # hide "Learn about this picture"
 ```
 
-**Microsoft Edge:** skip the first-run setup (no welcome pages, no sign-in prompt, no importing other browsers' data) and hide the Copilot button and the sidebar. These are machine-wide Edge policies, so Edge will say "Your browser is managed by your organization"; `edge://policy` lists them. They apply the next time Edge starts:
+**Microsoft Edge:** skip the first-run setup (no welcome pages, no sign-in prompt, no importing other browsers' data) and hide the Copilot button and the sidebar. These are machine-wide Edge policies, so Edge will say "Your browser is managed by your organization"; `edge://policy`{:.path} lists them. They apply the next time Edge starts:
 
 ```powershell
 $p = "HKLM:\SOFTWARE\Policies\Microsoft\Edge"
@@ -365,7 +365,7 @@ Set-ItemProperty -Path $p -Name Microsoft365CopilotChatIconEnabled -Type DWord -
 Set-ItemProperty -Path $p -Name HubsSidebarEnabled -Type DWord -Value 0                   # no sidebar
 ```
 
-**Edge search engine:** set it by hand. The policy for it only works on PCs joined to a domain or managed by an organization. Open `edge://settings/search` in Edge (type it in the address bar; links to `edge://` pages don't work from websites) and set **Search engine used in the address bar** to **Google**.
+**Edge search engine:** set it by hand. The policy for it only works on PCs joined to a domain or managed by an organization. Open `edge://settings/search`{:.path} in Edge (type it in the address bar; links to `edge://`{:.path} pages don't work from websites) and set **Search engine used in the address bar** to **Google**.
 
 Restart Explorer to apply the theme, Alt+Tab, File Explorer and taskbar changes now (the taskbar disappears for a moment). The touchpad change applies after you sign out and back in:
 
@@ -389,7 +389,7 @@ _No steps yet._
 
 {% include remove-again.md %}
 
-Restart so every change takes effect: theme and Alt+Tab everywhere, touchpad scrolling, fast startup, PATH for newly installed tools, and anything Windows Update left pending. `-Force` doesn't wait for apps to close, so save open work first:
+Restart so every change takes effect: theme and Alt+Tab everywhere, touchpad scrolling, fast startup, PATH for newly installed tools, and anything Windows Update left pending. `-Force`{:.cmd} doesn't wait for apps to close, so save open work first:
 
 ```powershell
 Restart-Computer -Force

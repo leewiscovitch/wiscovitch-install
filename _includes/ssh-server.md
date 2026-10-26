@@ -24,7 +24,7 @@ Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private
 Get-NetFirewallRule -DisplayName 'OpenSSH SSH Server*' | Set-NetFirewallRule -Profile Any
 ```
 
-Trust the keys published at [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys). Because `{{ site.user }}` is an administrator, Windows reads them from a shared file instead of `~\.ssh\authorized_keys`, and that file must be locked to Administrators and SYSTEM:
+Trust the keys published at [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys). Because `{{ site.user }}`{:.user} is an administrator, Windows reads them from a shared file instead of `~\.ssh\authorized_keys`{:.path}, and that file must be locked to Administrators and SYSTEM:
 
 ```powershell
 $keys = "$env:ProgramData\ssh\administrators_authorized_keys"
@@ -39,7 +39,7 @@ Accept SSH logins with your keys ([how keys work]({{ '/ssh/' | relative_url }}))
 sudo systemctl enable --now {{ pm.sshd_service }}
 ```
 
-Trust the keys published at [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys) (run as `{{ site.user }}`):
+Trust the keys published at [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys) (run as `{{ site.user }}`{:.user}):
 
 ```bash
 mkdir -p ~/.ssh

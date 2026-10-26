@@ -12,15 +12,15 @@ packages:
 
 ## Before you start
 
-Run as a user with `sudo` rights.
+Run as a user with `sudo`{:.cmd} rights.
 
-CachyOS defaults to fish, but these steps use bash syntax. Make bash the login shell (asks for your password):
+CachyOS defaults to `fish`{:.cmd}, but these steps use `bash`{:.cmd} syntax. Make `bash`{:.cmd} the login shell (asks for your password):
 
 ```bash
 chsh -s /bin/bash
 ```
 
-Then switch to bash in the current terminal:
+Then switch to `bash`{:.cmd} in the current terminal:
 
 ```bash
 bash

@@ -14,7 +14,7 @@ packages:
 
 ## Before you start
 
-Run as a user with `sudo` rights.
+Run as a user with `sudo`{:.cmd} rights.
 
 {% include sudoers.md %}
 
@@ -46,7 +46,7 @@ For a laptop running Ubuntu Server on constant power: it keeps running with the 
 
 {% include server-power.md part="lid" %}
 
-Wi-Fi on Ubuntu Server is configured with netplan, not NetworkManager, so the Wi-Fi power-save file from the desktop pages doesn't apply. A wired connection is the better choice for a server anyway.
+Wi-Fi on Ubuntu Server is configured with `netplan`{:.cmd}, not `NetworkManager`{:.cmd}, so the Wi-Fi power-save file from the desktop pages doesn't apply. A wired connection is the better choice for a server anyway.
 
 {% include server-power.md part="check" %}
 

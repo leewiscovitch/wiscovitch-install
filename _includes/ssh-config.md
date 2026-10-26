@@ -1,6 +1,6 @@
 {%- assign pm = site.data.pm[page.pm] -%}
 {% if pm.lang == "powershell" -%}
-SSH client config for `{{ site.user }}`. Accepts new host keys automatically and doesn't save them (Windows uses `NUL` where Linux uses `/dev/null`):
+SSH client config for `{{ site.user }}`{:.user}. Accepts new host keys automatically and doesn't save them (Windows uses `NUL`{:.path} where Linux uses `/dev/null`{:.path}):
 
 ```powershell
 New-Item -ItemType Directory -Force "$HOME\.ssh" | Out-Null
@@ -11,7 +11,7 @@ Host *
 "@
 ```
 {%- else -%}
-SSH client config for `{{ site.user }}` (run as `{{ site.user }}`, not root). Accepts new host keys automatically and doesn't save them:
+SSH client config for `{{ site.user }}`{:.user} (run as `{{ site.user }}`{:.user}, not `root`{:.user}). Accepts new host keys automatically and doesn't save them:
 
 ```bash
 mkdir -p ~/.ssh

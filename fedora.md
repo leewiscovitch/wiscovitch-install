@@ -12,7 +12,7 @@ packages:
 
 ## Before you start
 
-Run as a user with `sudo` rights.
+Run as a user with `sudo`{:.cmd} rights.
 
 {% include sudoers.md %}
 
@@ -44,7 +44,7 @@ For a laptop that runs as a server on constant power: it keeps running with the 
 
 {% include server-power.md part="lid" %}
 
-Idle sleep only applies with a desktop. Server installs never sleep on idle, so there's nothing more to set. On a GNOME desktop (Fedora Workstation), to never sleep on AC and sleep after 30 minutes on battery, add a system-wide default for every user account and one for the login screen. Fedora's dconf profiles already read the `local` and `gdm` databases. Not tested on a GNOME machine yet:
+Idle sleep only applies with a desktop. Server installs never sleep on idle, so there's nothing more to set. On a GNOME desktop (Fedora Workstation), to never sleep on AC and sleep after 30 minutes on battery, add a system-wide default for every user account and one for the login screen. Fedora's `dconf`{:.cmd} profiles already read the `local`{:.val} and `gdm`{:.val} databases. Not tested on a GNOME machine yet:
 
 ```bash
 sudo mkdir -p /etc/dconf/db/local.d /etc/dconf/db/gdm.d

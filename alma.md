@@ -15,7 +15,7 @@ packages:
 
 ## Before you start
 
-Run as a user with `sudo` rights. Same steps for AlmaLinux and Rocky Linux, versions 9 and 10.
+Run as a user with `sudo`{:.cmd} rights. Same steps for AlmaLinux and Rocky Linux, versions 9 and 10.
 
 {% include sudoers.md %}
 
@@ -29,7 +29,7 @@ Run as a user with `sudo` rights. Same steps for AlmaLinux and Rocky Linux, vers
 
 ## Install
 
-Enable EPEL first (`htop` and many extras come from it):
+Enable EPEL first (`htop`{:.cmd} and many extras come from it):
 
 ```bash
 sudo dnf install -y epel-release
@@ -53,7 +53,7 @@ For a laptop that runs as a server on constant power: it keeps running with the 
 
 {% include server-power.md part="lid" %}
 
-Idle sleep only applies with a desktop. Server installs never sleep on idle, so there's nothing more to set. On a GNOME desktop ("Server with GUI" or "Workstation" installs), to never sleep on AC and sleep after 30 minutes on battery, add a system-wide default for every user account and one for the login screen. AlmaLinux/Rocky's dconf profiles already read the `local` and `gdm` databases. Not tested on a GNOME machine yet:
+Idle sleep only applies with a desktop. Server installs never sleep on idle, so there's nothing more to set. On a GNOME desktop ("Server with GUI" or "Workstation" installs), to never sleep on AC and sleep after 30 minutes on battery, add a system-wide default for every user account and one for the login screen. AlmaLinux/Rocky's `dconf`{:.cmd} profiles already read the `local`{:.val} and `gdm`{:.val} databases. Not tested on a GNOME machine yet:
 
 ```bash
 sudo mkdir -p /etc/dconf/db/local.d /etc/dconf/db/gdm.d

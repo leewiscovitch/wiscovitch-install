@@ -34,7 +34,7 @@ sudo timedatectl set-ntp false &&\
 sudo timedatectl set-ntp true
 ```
 
-Check the zone and sync status; look for `Time zone: {{ site.timezone }}` and `System clock synchronized: yes` (it can take a few seconds):
+Check the zone and sync status; look for `Time zone: {{ site.timezone }}`{:.val} and `System clock synchronized: yes`{:.val} (it can take a few seconds):
 
 ```bash
 timedatectl

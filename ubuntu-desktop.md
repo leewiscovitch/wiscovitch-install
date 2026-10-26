@@ -14,7 +14,7 @@ packages:
 
 ## Before you start
 
-Run as a user with `sudo` rights.
+Run as a user with `sudo`{:.cmd} rights.
 
 {% include sudoers.md %}
 
@@ -32,7 +32,7 @@ Run as a user with `sudo` rights.
 
 ## Settings
 
-Scrolling: normal, not natural, for touchpads and mice. Run as `{{ site.user }}` in a terminal inside the desktop session (not over SSH, and not with `sudo`):
+Scrolling: normal, not natural, for touchpads and mice. Run as `{{ site.user }}`{:.user} in a terminal inside the desktop session (not over SSH, and not with `sudo`{:.cmd}):
 
 ```bash
 gsettings set org.gnome.desktop.peripherals.touchpad natural-scroll false &&\
