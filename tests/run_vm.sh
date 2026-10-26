@@ -32,6 +32,8 @@ scp -q "${SSH_OPTS[@]}" -r "$dir" "tech@$ip:/tmp/blocks"
 for f in "$dir"/*.bash; do
     name=$(basename "$f" .bash)
     if grep -qx 'bash' "$f"; then add "$name" skip "starts an interactive shell"; continue; fi
+    # Claude Code service: signing in is interactive, and the plugin and Remote Control check need it
+    if grep -q 'claude --remote-control "$(hostname -s)"\|^claude plugin \|grep -o .rc active' "$f"; then add "$name" skip "needs the one-time claude.ai sign-in"; continue; fi
     # GNOME idle-sleep steps need a desktop; the cloud templates have none
     if grep -q 'dconf update' "$f" && ! S 'command -v dconf' >/dev/null 2>&1; then add "$name" skip "no GNOME desktop (dconf) on this VM"; continue; fi
     # Answer prompts like a person would: test values for read -p, "y" for anything else
@@ -64,6 +66,9 @@ check git-identity "git name/email from the prompts"             'test "$(git co
 check packages     "page packages installed (git, micro, htop)"  'command -v git && command -v micro && command -v htop'
 if grep -qs 'HandleLidSwitch=ignore' "$dir"/*.bash; then   # the page's Optional server-use section
     check lid-ignore "logind ignores the lid (battery and AC)" 'busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager HandleLidSwitch HandleLidSwitchExternalPower | grep -c "\"ignore\"" | grep -qx 2'
+fi
+if grep -qs 'claude.service' "$dir"/*.bash; then   # the page's Claude Code service (runs until signed in)
+    check claude-service "claude.service enabled and running (tmux session)" 'systemctl is-enabled claude && systemctl is-active claude && tmux has-session -t claude'
 fi
 if grep -qs 'wifi.powersave = 2' "$dir"/*.bash; then
     check wifi-powersave "NetworkManager Wi-Fi power save off" 'NetworkManager --print-config | grep -qx "wifi.powersave=2"'

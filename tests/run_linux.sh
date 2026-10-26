@@ -34,6 +34,8 @@ for cmd in systemctl timedatectl gsettings chsh dconf busctl NetworkManager; do
     printf '#!/bin/sh\necho "[stub] %s $*"\n' "$cmd" > "/usr/local/bin/$cmd"
     chmod +x "/usr/local/bin/$cmd"
 done
+# Folders systemd and login shells provide on a real install
+mkdir -p /etc/systemd/system /etc/profile.d
 # GDM's login-screen defaults file, as a desktop install has it (only its power section header)
 if command -v apt-get >/dev/null && [ ! -e /etc/gdm3/greeter.dconf-defaults ]; then
     mkdir -p /etc/gdm3 && printf '[org/gnome/settings-daemon/plugins/power]\n' > /etc/gdm3/greeter.dconf-defaults
@@ -44,6 +46,13 @@ for f in "$dir"/*.bash; do
     log=$dir/$name.log
     if grep -qx 'bash' "$f"; then
         printf '%s\tskip\tstarts an interactive shell\n' "$name" >> "$results"
+        continue
+    fi
+    # Claude Code service: signing in is interactive (a person approves it in a browser),
+    # and the plugin and the Remote Control check need that sign-in
+    if grep -q 'claude --remote-control "$(hostname -s)"\|^claude plugin \|grep -o .rc active' "$f"; then
+        printf '%s	skip	needs the one-time claude.ai sign-in
+' "$name" >> "$results"
         continue
     fi
     # The server-use check reads a running logind/NetworkManager; the VM tests check it

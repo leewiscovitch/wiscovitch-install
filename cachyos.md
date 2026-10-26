@@ -64,6 +64,8 @@ Idle sleep on CachyOS's default KDE Plasma desktop is set in **System Settings â
 
 {% include server-power.md part="bios" %}
 
+{% include claude-service.md %}
+
 ## Verify
 
 {% include os-info.md %}

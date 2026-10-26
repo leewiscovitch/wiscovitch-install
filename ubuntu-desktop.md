@@ -81,6 +81,8 @@ sudo sed -i "/^\[org\/gnome\/settings-daemon\/plugins\/power\]/a sleep-inactive-
 
 {% include server-power.md part="bios" %}
 
+{% include claude-service.md %}
+
 ## Verify
 
 {% include os-info.md %}

@@ -74,6 +74,8 @@ sudo dconf update
 
 {% include server-power.md part="bios" %}
 
+{% include claude-service.md %}
+
 ## Verify
 
 {% include os-info.md %}

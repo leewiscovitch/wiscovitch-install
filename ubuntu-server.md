@@ -52,6 +52,8 @@ Wi-Fi on Ubuntu Server is configured with netplan, not NetworkManager, so the Wi
 
 {% include server-power.md part="bios" %}
 
+{% include claude-service.md %}
+
 ## Verify
 
 {% include os-info.md %}
