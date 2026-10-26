@@ -175,9 +175,17 @@
       });
     });
 
-    // Make sudo stand out in every code block (Rouge or the script above already wraps it)
+    // Make sudo stand out in every code block (Rouge or the script above already wraps it).
+    // Rouge sometimes puts "sudo" and the next builtin in one span ("sudo mkdir"): split it.
     document.querySelectorAll('pre code span').forEach(function (s) {
-      if (s.textContent.trim() === 'sudo') s.classList.add('sudo');
+      if (s.textContent.trim() === 'sudo') { s.classList.add('sudo'); return; }
+      var t = s.firstChild;
+      if (s.childNodes.length !== 1 || t.nodeType !== 3 || !/^sudo\s/.test(t.nodeValue)) return;
+      t.splitText(4);
+      var red = document.createElement('span');
+      red.className = 'sudo';
+      s.insertBefore(red, t);
+      red.appendChild(t);
     });
 
     // Expected output: Rouge doesn't know an "output" language, so kramdown emits a bare
