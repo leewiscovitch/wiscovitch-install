@@ -21,7 +21,7 @@ Every OS page has the same sections in the same order: Before you start, Time zo
 
 ## Code blocks
 
-Commands go in fenced blocks tagged with their shell, ` ```bash ` or ` ```powershell `, one command per line. Chained bash commands end each line with ` &&\` so you can paste the whole block; package lists stay on one line. Every command block gets a Copy button.
+Commands go in fenced blocks tagged with their shell, `` ```bash `` or `` ```powershell ``, one command per line. Chained bash commands end each line with ` &&\` so you can paste the whole block; package lists stay on one line. Every command block gets a Copy button.
 
 Code blocks are coloured by the highlighter (Rouge). Its bash support only knows shell builtins, so a small script in the layout also colours the command word of each bash command (`ssh-keygen`{:.cmd}, `timedatectl`{:.cmd}, …) by its position, and makes every `sudo`{:.sudo} bold red. Neither changes the text you copy.
 
@@ -41,7 +41,7 @@ Commands, names, paths and values mentioned in normal text are always in backtic
 
 ## Expected output
 
-What a command prints goes in its own block right after it, tagged ` ```output `:
+What a command prints goes in its own block right after it, tagged `` ```output ``:
 
 ~~~markdown
 ```bash
@@ -62,7 +62,7 @@ Output blocks get an "Output" label, the page background with a dashed border, m
 1. **Edit the right place.** A command used on several pages lives in an include or `_data/pm.yml`{:.path}; a version lives in `_config.yml`{:.path} (change the version and its SHA-256 together). Only page-specific steps are written in the page itself.
 2. **Keep the formatting:** one command per line, ` &&\` between chained bash commands, package lists on one line, and PowerShell lines as they are (no backtick line continuations).
 3. **Tag inline code** in any new text with `{:.cmd}`{:.val}, `{:.user}`{:.val}, `{:.path}`{:.val}, `{:.val}`{:.val} or `{:.sudo}`{:.val}, and put command, user and path names in backticks.
-4. **Add the expected output** (` ```output `) or the no-output note under any new command block, ideally from a real run.
+4. **Add the expected output** (`` ```output ``) or the no-output note under any new command block, ideally from a real run.
 5. **No secrets.** The repository and site are public: no passwords, keys, tokens, Wi-Fi passwords, internal addresses or hostnames. Describe placeholders in text (`<` breaks PowerShell blocks).
 6. **Inside includes,** keep Markdown at column 0 and code fences on their own lines.
 7. **New files that aren't pages** (notes, docs) go into `exclude:`{:.val} in `_config.yml`{:.path}, or Jekyll publishes them.
