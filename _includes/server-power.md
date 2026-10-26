@@ -18,6 +18,8 @@ HandleLidSwitchDocked=ignore
 EOF
 sudo systemctl reload systemd-logind
 ```
+
+{% include no-output.md %}
 {%- elsif include.part == "wifi" -%}
 Wi-Fi power saving off (it delays replies and can drop idle connections). `NetworkManager`{:.cmd} reads its config files in alphabetical order and the last setting wins, so the file name has to sort after any distro default (Ubuntu ships `default-wifi-powersave-on.conf`{:.path}). It applies from the next reboot:
 
@@ -29,6 +31,8 @@ wifi.powersave = 2
 EOF
 ```
 
+{% include no-output.md %}
+
 Wi-Fi reconnects at boot without anyone signing in only if its saved password is available to all users (the default for networks added in the desktop's settings or with `nmcli`{:.cmd}). With both Ethernet and Wi-Fi connected, `NetworkManager`{:.cmd} prefers Ethernet and keeps Wi-Fi as a fallback.
 {%- elsif include.part == "check" -%}
 Check (after a reboot):
@@ -38,6 +42,14 @@ busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedeskt
 {% if include.idle == "gnome" %}dconf read /org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-type   # 'nothing'
 dconf read /org/gnome/settings-daemon/plugins/power/sleep-inactive-battery-timeout   # 1800
 {% endif %}{% if include.wifi %}sudo NetworkManager --print-config | grep '^wifi.powersave'   # wifi.powersave=2
+{% endif %}```
+
+```output
+s "ignore"
+s "ignore"
+{% if include.idle == "gnome" %}'nothing'
+1800
+{% endif %}{% if include.wifi %}wifi.powersave=2
 {% endif %}```
 {%- elsif include.part == "bios" -%}
 In the firmware setup (F10 at power-on on HP laptops), consider capping battery charging, which greatly extends battery life on permanent AC (HP: **Battery Health Manager → Maximize my battery health**), and turning on power-on when AC power returns after an outage, if the model offers it.

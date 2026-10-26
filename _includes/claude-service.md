@@ -24,17 +24,47 @@ curl -fsSL https://claude.ai/install.sh | bash
 sudo install -d -o {{ site.user }} -g {{ site.user }} /opt/claude "/opt/claude/$(hostname -s)" /opt/claude/homelab
 ```
 
+```output
+…
+Setting up Claude Code...
+
+Checking installation status...
+Installing Claude Code native build latest...
+Setting up launcher and shell integration...
+✔ Claude Code successfully installed!
+
+  Version: <version>
+
+  Location: ~/.local/bin/claude
+
+⚠ Setup notes:
+  ● Native installation exists but ~/.local/bin is not in your PATH. Run:
+
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+
+✅ Installation complete!
+```
+
+The PATH note only applies to the current session: most distros add `~/.local/bin`{:.path} to the PATH at login once the folder exists, so a new SSH session finds `claude`{:.cmd}.
+
 Sign in once, in a **new** SSH session (so `claude`{:.cmd} is on the PATH). Accept the folder trust prompt, pick your **Claude account with subscription**, open the link it prints in a browser on any computer, paste back the code, and accept Remote Control if asked. Check that the machine appears under Remote Control, then leave with `/exit`{:.cmd}:
 
 ```bash
 cd "/opt/claude/$(hostname -s)" && claude --remote-control "$(hostname -s)"
 ```
 
+{% include no-output.md text="Interactive: the folder trust prompt, the sign-in link and code, and Remote Control. Then the Claude prompt." %}
+
 Optional: the [superpowers](https://github.com/obra/superpowers) plugin for every session:
 
 ```bash
 claude plugin marketplace add obra/superpowers-marketplace
 claude plugin install superpowers@superpowers-marketplace
+```
+
+```output
+✔ Successfully added marketplace: superpowers-marketplace (declared in user settings)
+Installing plugin "superpowers@superpowers-marketplace"...✔ Successfully installed plugin: superpowers@superpowers-marketplace (scope: user)
 ```
 
 **Session service.** One conversation that `--continue`{:.cmd} reopens after every restart or reboot (it starts fresh if there's none); the loop restarts Claude if it exits. The unit is written with this machine's hostname and paths filled in:
@@ -65,6 +95,10 @@ sudo systemctl daemon-reload &&\
 sudo systemctl enable --now claude-session
 ```
 
+```output
+Created symlink '/etc/systemd/system/multi-user.target.wants/claude-session.service' → '/etc/systemd/system/claude-session.service'.
+```
+
 **Server service.** Sessions started from claude.ai/code or the phone run in `/opt/claude/homelab`{:.path} in `auto`{:.val} permission mode (change `--permission-mode`{:.cmd} to `default`{:.val} to have them ask first). The first start asks two questions in its `tmux`{:.cmd} session, trusting the folder and enabling Remote Control, so attach once and answer `y`{:.val} to both (see below):
 
 ```bash
@@ -93,6 +127,10 @@ sudo systemctl daemon-reload &&\
 sudo systemctl enable --now claude-server
 ```
 
+```output
+Created symlink '/etc/systemd/system/multi-user.target.wants/claude-server.service' → '/etc/systemd/system/claude-server.service'.
+```
+
 A reminder at every login on how to reach them:
 
 ```bash
@@ -105,12 +143,21 @@ done
 EOF
 ```
 
+{% include no-output.md %}
+
 Check whichever you set up:
 
 ```bash
 systemctl is-active claude-session claude-server   # active (one line per service)
 tmux -L claude-session capture-pane -p | grep -o 'rc active'   # rc active (Remote Control, in the status bar)
 tmux -L claude-server capture-pane -p | grep -o 'Connected · homelab'   # Connected · homelab
+```
+
+```output
+active
+active
+rc active
+Connected · homelab
 ```
 
 To attach: `tmux -L claude-session attach`{:.cmd} or `tmux -L claude-server attach`{:.cmd}; detach with Ctrl+b then d. Inside, don't use `/exit`{:.cmd} (the loop just starts Claude again); detach instead. A one-time dialog (like a "try the new renderer" offer) can wait on screen after an update: attach and answer it. Sessions use the permission mode set for them (the session service: this account's setting); with passwordless `sudo`{:.sudo}, a remote message can change the whole system, so choose the mode deliberately.
@@ -120,5 +167,7 @@ To attach: `tmux -L claude-session attach`{:.cmd} or `tmux -L claude-server atta
 ```bash
 sudo install -d -o {{ site.user }} -g {{ site.user }} /opt/claude/work
 ```
+
+{% include no-output.md %}
 
 Use `/opt/claude/work`{:.path} (or any folder other than the services'): the session service reopens the most recent conversation **in its folder**, so sessions started there would be picked up instead of its own. SSH sessions use the desktop computer's plugins (without their hooks) and end when you close them; the services keep running alongside.

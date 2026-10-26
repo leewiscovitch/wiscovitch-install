@@ -38,6 +38,17 @@ Accept SSH logins with your keys ([how keys work]({{ '/ssh/' | relative_url }}))
 {{ pm.install }} {{ pm.sshd_pkg }}
 sudo systemctl enable --now {{ pm.sshd_service }}
 ```
+{% if page.pm == "apt" %}
+```output
+Reading package lists... Done
+…
+Setting up openssh-server (<version>) ...
+Creating config file /etc/ssh/sshd_config with new version
+…
+Synchronizing state of ssh.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable ssh
+```
+{% endif %}
 
 Trust the keys published at [github.com/{{ site.github_user }}.keys](https://github.com/{{ site.github_user }}.keys) (run as `{{ site.user }}`{:.user}):
 
@@ -47,4 +58,6 @@ chmod 700 ~/.ssh
 curl -fsSL https://github.com/{{ site.github_user }}.keys >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
 ```
+
+{% include no-output.md %}
 {%- endif %}

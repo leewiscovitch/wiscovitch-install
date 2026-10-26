@@ -7,3 +7,7 @@ EOF
 sudo chmod 0440 /etc/sudoers.d/{{ site.user }}
 sudo visudo -cf /etc/sudoers.d/{{ site.user }}
 ```
+
+```output
+/etc/sudoers.d/{{ site.user }}: parsed OK
+```

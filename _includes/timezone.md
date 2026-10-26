@@ -27,6 +27,8 @@ Set the time zone to US Eastern:
 sudo timedatectl set-timezone {{ site.timezone }}
 ```
 
+{% include no-output.md %}
+
 Turn on network time sync. Turning it off and on again forces an immediate sync, whichever time service the distro uses:
 
 ```bash
@@ -34,9 +36,21 @@ sudo timedatectl set-ntp false &&\
 sudo timedatectl set-ntp true
 ```
 
+{% include no-output.md %}
+
 Check the zone and sync status; look for `Time zone: {{ site.timezone }}`{:.val} and `System clock synchronized: yes`{:.val} (it can take a few seconds):
 
 ```bash
 timedatectl
+```
+
+```output
+               Local time: Mon 2026-10-26 11:24:35 EDT
+           Universal time: Mon 2026-10-26 15:24:35 UTC
+                 RTC time: Mon 2026-10-26 15:24:35
+                Time zone: {{ site.timezone }} (EDT, -0400)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
 ```
 {%- endif %}

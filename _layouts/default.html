@@ -79,6 +79,24 @@
     .highlight .sh, .highlight .si, .highlight .sx, .highlight .no { color: var(--hl-string); }
     .highlight .nv, .highlight .vg, .highlight .vi, .highlight .vc { color: var(--hl-var); }
     .highlight .o, .highlight .ow { color: var(--hl-keyword); }
+    /* Expected output (```output blocks): the machine's answer, not something to paste. Page
+       background, dashed border, muted text, an "Output" label and no Copy button; it sits
+       right under its command. Long output is collapsed by the script below. */
+    div.language-output { position: relative; margin-top: -8px; }
+    div.language-output pre {
+      background: var(--bg); border-style: dashed; color: var(--muted); padding-right: 16px; padding-top: 22px;
+    }
+    div.language-output::before {
+      content: "Output"; position: absolute; top: 5px; left: 16px; z-index: 1;
+      font: 600 11px system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+    }
+    .output-toggle {
+      font: 13px system-ui, sans-serif; color: var(--accent); background: none; border: 0;
+      padding: 4px 0 0; cursor: pointer;
+    }
+    /* Notes for commands that print nothing (or ask questions): _includes/no-output.md */
+    p.no-output { margin: -6px 0 16px; font-size: 14px; color: var(--muted); }
+    p.no-output::before { content: "Output: "; font-weight: 600; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
     .copy-btn {
       position: absolute; top: 8px; right: 8px;
       font: 13px system-ui, sans-serif; padding: 4px 10px; cursor: pointer;
@@ -162,8 +180,28 @@
       if (s.textContent.trim() === 'sudo') s.classList.add('sudo');
     });
 
-    // Add a Copy button to every code block
+    // Long expected output: show the first and last lines, with a toggle for the rest
+    document.querySelectorAll('div.language-output pre code').forEach(function (code) {
+      var full = code.textContent.replace(/\n+$/, ''), lines = full.split('\n'), keep = 4;
+      if (lines.length <= keep * 2 + 4) return;
+      var hidden = lines.length - keep * 2;
+      var short = lines.slice(0, keep).concat(['… ' + hidden + ' more lines …'], lines.slice(-keep)).join('\n');
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'output-toggle';
+      var show = function (all) {
+        code.textContent = all ? full : short;
+        btn.textContent = all ? 'Show less' : 'Show all ' + lines.length + ' lines';
+        btn.setAttribute('aria-expanded', all);
+      };
+      btn.addEventListener('click', function () { show(btn.getAttribute('aria-expanded') !== 'true'); });
+      show(false);
+      code.closest('div.language-output').appendChild(btn);
+    });
+
+    // Add a Copy button to every code block (not to expected output)
     document.querySelectorAll('pre').forEach(function (pre) {
+      if (pre.closest('div.language-output')) return;
       // Read the text before the button is added so its label isn't copied
       var text = pre.innerText.replace(/\n+$/, '');
       var btn = document.createElement('button');

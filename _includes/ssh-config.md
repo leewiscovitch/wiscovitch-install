@@ -23,4 +23,6 @@ Host *
 EOF
 chmod 600 ~/.ssh/config
 ```
+
+{% include no-output.md %}
 {%- endif %}

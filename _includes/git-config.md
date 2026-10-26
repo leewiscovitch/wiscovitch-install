@@ -22,3 +22,5 @@ git config --global user.email "$email" &&\
 git config --global init.defaultBranch main
 ```
 {%- endif %}
+
+{% include no-output.md text="Asks for: Git name, Git email. Nothing else when it succeeds." %}

@@ -66,7 +66,8 @@ def main():
         wait_for_revision(args.wait)
     out = Path(args.outdir)
     out.mkdir(parents=True, exist_ok=True)
-    found = list(blocks(fetch(args.page)))
+    # ```output blocks show a command's expected output; they aren't commands
+    found = [b for b in blocks(fetch(args.page)) if b[1] != "output"]
     if not found:
         sys.exit(f"no code blocks found on {args.page}")
     for i, (section, lang, code) in enumerate(found, 1):

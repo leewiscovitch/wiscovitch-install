@@ -39,6 +39,8 @@ gsettings set org.gnome.desktop.peripherals.touchpad natural-scroll false &&\
 gsettings set org.gnome.desktop.peripherals.mouse natural-scroll false
 ```
 
+{% include no-output.md %}
+
 ## Configure
 
 {% include ssh-config.md %}
@@ -70,10 +72,14 @@ EOF
 sudo dconf update
 ```
 
+{% include no-output.md %}
+
 ```bash
 grep -q '^sleep-inactive-ac-type=' /etc/gdm3/greeter.dconf-defaults ||
 sudo sed -i "/^\[org\/gnome\/settings-daemon\/plugins\/power\]/a sleep-inactive-ac-type='nothing'\nsleep-inactive-ac-timeout=0\nsleep-inactive-battery-type='suspend'\nsleep-inactive-battery-timeout=1800" /etc/gdm3/greeter.dconf-defaults
 ```
+
+{% include no-output.md %}
 
 {% include server-power.md part="wifi" %}
 
