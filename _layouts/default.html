@@ -82,11 +82,11 @@
     /* Expected output (```output blocks): the machine's answer, not something to paste. Page
        background, dashed border, muted text, an "Output" label and no Copy button; it sits
        right under its command. Long output is collapsed by the script below. */
-    div.language-output { position: relative; margin-top: -8px; }
-    div.language-output pre {
-      background: var(--bg); border-style: dashed; color: var(--muted); padding-right: 16px; padding-top: 22px;
+    .output-block { position: relative; margin: -8px 0 16px; }
+    .output-block pre {
+      margin: 0; background: var(--bg); border-style: dashed; color: var(--muted); padding-right: 16px; padding-top: 22px;
     }
-    div.language-output::before {
+    .output-block::before {
       content: "Output"; position: absolute; top: 5px; left: 16px; z-index: 1;
       font: 600 11px system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
     }
@@ -180,8 +180,14 @@
       if (s.textContent.trim() === 'sudo') s.classList.add('sudo');
     });
 
-    // Long expected output: show the first and last lines, with a toggle for the rest
-    document.querySelectorAll('div.language-output pre code').forEach(function (code) {
+    // Expected output: Rouge doesn't know an "output" language, so kramdown emits a bare
+    // <pre><code class="language-output">. Wrap it for the styles, and collapse long output
+    // to its first and last lines with a toggle for the rest.
+    document.querySelectorAll('pre > code.language-output').forEach(function (code) {
+      var pre = code.parentNode, wrap = document.createElement('div');
+      wrap.className = 'output-block';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
       var full = code.textContent.replace(/\n+$/, ''), lines = full.split('\n'), keep = 4;
       if (lines.length <= keep * 2 + 4) return;
       var hidden = lines.length - keep * 2;
@@ -196,12 +202,12 @@
       };
       btn.addEventListener('click', function () { show(btn.getAttribute('aria-expanded') !== 'true'); });
       show(false);
-      code.closest('div.language-output').appendChild(btn);
+      wrap.appendChild(btn);
     });
 
     // Add a Copy button to every code block (not to expected output)
     document.querySelectorAll('pre').forEach(function (pre) {
-      if (pre.closest('div.language-output')) return;
+      if (pre.closest('.output-block')) return;
       // Read the text before the button is added so its label isn't copied
       var text = pre.innerText.replace(/\n+$/, '');
       var btn = document.createElement('button');
