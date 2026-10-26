@@ -46,6 +46,11 @@ for f in "$dir"/*.bash; do
         printf '%s\tskip\tstarts an interactive shell\n' "$name" >> "$results"
         continue
     fi
+    # The server-use check reads a running logind/NetworkManager; the VM tests check it
+    if grep -q '^busctl get-property org.freedesktop.login1' "$f"; then
+        printf '%s\tskip\treads running logind/NetworkManager (checked in VM tests)\n' "$name" >> "$results"
+        continue
+    fi
     tmp=/tmp/$name.sh
     cp "$f" "$tmp" && chmod a+r "$tmp"
     # Answer prompts like a person would: test values for read -p, "y" for anything else
