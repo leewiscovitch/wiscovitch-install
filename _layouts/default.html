@@ -97,6 +97,10 @@
     /* Notes for commands that print nothing (or ask questions): _includes/no-output.md */
     p.no-output { margin: -6px 0 16px; font-size: 14px; color: var(--muted); }
     p.no-output::before { content: "Output: "; font-weight: 600; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+    /* Quiet link to the About page at the bottom of every page */
+    .site-footer { margin-top: 48px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; }
+    .site-footer a { color: var(--muted); text-decoration: none; }
+    .site-footer a:hover { color: var(--accent); text-decoration: underline; }
     .copy-btn {
       position: absolute; top: 8px; right: 8px;
       font: 13px system-ui, sans-serif; padding: 4px 10px; cursor: pointer;
@@ -111,6 +115,7 @@
     {% if page.url != "/" %}<a class="back" href="{{ page.parent | default: '/' | relative_url }}">← {{ page.parent_title | default: 'All OSes' }}</a>{% endif %}
     <h1>{{ page.title }}</h1>
     {{ content }}
+    {% if page.url != "/about/" %}<footer class="site-footer"><a href="{{ '/about/' | relative_url }}">About this site</a></footer>{% endif %}
   </main>
   <script>
     // Sticky bar linking to each ## section, built from the page's h2 headings
