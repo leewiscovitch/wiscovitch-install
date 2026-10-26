@@ -6,6 +6,8 @@
   <meta name="revision" content="{{ site.github.build_revision }}">
   <title>{% if page.title and page.title != site.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
   <style>
+    /* Native controls (scrollbars) follow the light/dark scheme */
+    :root { color-scheme: light dark; }
     :root {
       --bg: #ffffff; --fg: #1f2328; --muted: #59636e; --border: #d1d9e0;
       --code-bg: #f6f8fa; --accent: #0969da; --ok: #1a7f37;
@@ -104,6 +106,52 @@
       var h1 = document.querySelector('main h1');
       h1.parentNode.insertBefore(nav, h1.nextSibling);
     })();
+
+    // Rouge's bash lexer leaves external commands (ssh-keygen, timedatectl, systemctl) as plain
+    // text, so mark the command word of each command like the PowerShell lexer does: line
+    // starts, after sudo, a pipe, &&, ||, ;, { or $(. Heredoc bodies are file contents, not
+    // commands. Only adds colour; the text (and so what Copy copies) is unchanged.
+    document.querySelectorAll('div.language-bash pre code').forEach(function (code) {
+      var marks = [], pos = 0, heredoc = null, continued = false;
+      var keywords = /^(if|then|else|elif|fi|for|while|until|do|done|case|esac|in|function|time|!)$/;
+      code.textContent.split('\n').forEach(function (line) {
+        var start = pos;
+        pos += line.length + 1;
+        if (heredoc) { if (line.trim() === heredoc) heredoc = null; continued = false; return; }
+        var hd = line.match(/<<-?\s*['"]?([A-Za-z_]\w*)['"]?/);
+        var wasContinued = continued;
+        continued = /\\$/.test(line) && !/(&&|\|\||\|)\s*\\$/.test(line);   // "\" without &&/|| continues the arguments
+        var re = /(^\s*|\|\|?\s*|&&\s*|;\s*|\{\s+|\$\()([A-Za-z0-9_.\/~+][\w.\/~+-]*)/g, m;
+        while ((m = re.exec(line))) {
+          var word = m[2], at = start + m.index + m[1].length;
+          if (m.index === 0 && m[1].trim() === '' && wasContinued) continue;
+          if (/^\s*#/.test(line) || keywords.test(word)) continue;
+          if (/^\w+=/.test(line.slice(at - start))) continue;                 // assignment, e.g. n=$(hostname -s)
+          marks.push([at, word]);
+          var next = word === 'sudo' && line.slice(at - start + 4).match(/^(\s+)([A-Za-z0-9_.\/~+][\w.\/~+-]*)/);
+          if (next) marks.push([at + 4 + next[1].length, next[2]]);         // sudo runs the next word
+        }
+        if (hd) heredoc = hd[1];
+      });
+      // Wrap each word where it sits inside one uncoloured text node, last first so offsets stay valid
+      var walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT), nodes = [], node, off = 0;
+      while ((node = walker.nextNode())) { nodes.push([node, off]); off += node.nodeValue.length; }
+      marks.sort(function (a, b) { return b[0] - a[0]; }).forEach(function (k) {
+        for (var i = 0; i < nodes.length; i++) {
+          var n = nodes[i][0], o = nodes[i][1];
+          if (k[0] < o || k[0] + k[1].length > o + n.nodeValue.length) continue;
+          var parent = n.parentNode;
+          if (parent !== code && parent.className && !/^(w|err)$/.test(parent.className)) return;   // Rouge coloured it already
+          var r = document.createRange();
+          r.setStart(n, k[0] - o);
+          r.setEnd(n, k[0] - o + k[1].length);
+          var span = document.createElement('span');
+          span.className = 'nb';
+          r.surroundContents(span);
+          return;
+        }
+      });
+    });
 
     // Add a Copy button to every code block
     document.querySelectorAll('pre').forEach(function (pre) {
