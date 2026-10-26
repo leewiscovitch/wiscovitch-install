@@ -9,7 +9,7 @@ pm: dnf
 # with the full curl package on EL9 (dnf refuses to install it).
 packages:
   - git
-  - vim
+  - micro
   - htop
 ---
 

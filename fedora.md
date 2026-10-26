@@ -6,7 +6,7 @@ pm: dnf
 packages:
   - git
   - curl
-  - vim
+  - micro
   - htop
 ---
 

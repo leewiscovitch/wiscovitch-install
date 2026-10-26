@@ -59,5 +59,5 @@ check sshd         "SSH server enabled and running"              'systemctl is-e
 check github-keys  "GitHub keys in authorized_keys"              'test "$(curl -fsSL https://github.com/'"${GITHUB_KEYS_USER:-leewiscovitch}"'.keys | grep -c .)" -le "$(grep -c "^ssh-" ~/.ssh/authorized_keys)"'
 check ssh-config   "ssh client config: accept-new"               'ssh -G example.com | grep -qx "stricthostkeychecking accept-new"'
 check git-identity "git name/email from the prompts"             'test "$(git config --global user.name)" = "CI Test" && test "$(git config --global user.email)" = ci@example.com'
-check packages     "page packages installed (git, vim, htop)"    'command -v git && command -v vim && command -v htop'
+check packages     "page packages installed (git, micro, htop)"  'command -v git && command -v micro && command -v htop'
 exit 0

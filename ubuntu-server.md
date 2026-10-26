@@ -8,7 +8,7 @@ pm: apt
 packages:
   - git
   - curl
-  - vim
+  - micro
   - htop
 ---
 

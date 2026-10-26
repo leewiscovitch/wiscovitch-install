@@ -6,7 +6,7 @@ pm: pacman
 packages:
   - git
   - curl
-  - vim
+  - micro
   - htop
 ---
 
